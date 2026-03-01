@@ -1,0 +1,214 @@
+.wrap{
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 44px 18px 56px;
+}
+
+.hero{
+  border: 1px solid rgba(212,175,55,0.10);
+  background: rgba(9,9,9,0.60);
+  border-radius: 18px;
+  padding: 28px 22px;
+  box-shadow:
+    0 10px 30px rgba(0,0,0,0.35),
+    0 0 22px rgba(212,175,55,0.07);
+}
+
+.h1{
+  font-size: clamp(26px, 4vw, 40px);
+  line-height: 1.1;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  color: rgba(255,255,255,0.95);
+  margin: 0 0 14px;
+}
+
+.lead{
+  margin: 0 0 14px;
+  color: rgba(255,255,255,0.74);
+  line-height: 1.7;
+  font-size: 15.5px;
+}
+
+.p{
+  margin: 0 0 12px;
+  color: rgba(255,255,255,0.66);
+  line-height: 1.75;
+  font-size: 15px;
+}
+
+.ctaRow{
+  margin-top: 18px;
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+}
+
+/* Button style aligned with VIAVIP “Publicar” look (dark + gold border + soft glow) */
+.ctaBtn{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 18px;
+  border-radius: 12px;
+  border: 1px solid rgba(212,175,55,0.50);
+  background: rgba(0,0,0,0.35);
+  color: rgba(212,175,55,0.95);
+  text-decoration: none;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  box-shadow:
+    0 8px 18px rgba(0,0,0,0.35),
+    0 0 18px rgba(212,175,55,0.10);
+  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease, color 160ms ease;
+  max-width: 100%;
+}
+
+.ctaBtn:hover{
+  transform: translateY(-1px);
+  border-color: rgba(212,175,55,0.70);
+  color: rgba(212,175,55,1);
+  box-shadow:
+    0 10px 24px rgba(0,0,0,0.42),
+    0 0 22px rgba(212,175,55,0.14);
+}
+
+.ctaIcon{
+  font-size: 16px;
+  line-height: 1;
+  opacity: 0.95;
+}
+
+.microcopy{
+  font-size: 12.5px;
+  color: rgba(255,255,255,0.52);
+  text-align: center;
+}
+
+.section{
+  margin-top: 22px;
+  border: 1px solid rgba(212,175,55,0.08);
+  background: rgba(9,9,9,0.45);
+  border-radius: 18px;
+  padding: 22px;
+  box-shadow:
+    0 10px 26px rgba(0,0,0,0.28),
+    0 0 18px rgba(212,175,55,0.06);
+}
+
+.h2{
+  margin: 0 0 14px;
+  font-size: 18px;
+  font-weight: 750;
+  color: rgba(212,175,55,0.92);
+  letter-spacing: 0.01em;
+}
+
+.steps{
+  display: grid;
+  gap: 12px;
+}
+
+.stepCard{
+  display: grid;
+  grid-template-columns: 52px 1fr;
+  gap: 12px;
+  padding: 14px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(212,175,55,0.10);
+  background: rgba(0,0,0,0.35);
+}
+
+.stepNum{
+  height: 40px;
+  width: 52px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  border: 1px solid rgba(212,175,55,0.32);
+  background: rgba(0,0,0,0.28);
+  color: rgba(212,175,55,0.95);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.stepTitle{
+  color: rgba(255,255,255,0.86);
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.stepText{
+  color: rgba(255,255,255,0.60);
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+.centerCta{
+  margin-top: 16px;
+  display: grid;
+  place-items: center;
+}
+
+.ctaBtnBig{
+  composes: ctaBtn;
+  padding: 14px 22px;
+  min-width: min(520px, 92vw);
+}
+
+.faq{
+  display: grid;
+  gap: 10px;
+}
+
+.faqItem{
+  border-radius: 14px;
+  border: 1px solid rgba(212,175,55,0.10);
+  background: rgba(0,0,0,0.35);
+  padding: 12px 14px;
+}
+
+.faqQ{
+  cursor: pointer;
+  list-style: none;
+  color: rgba(255,255,255,0.84);
+  font-weight: 650;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  outline: none;
+}
+
+/* remove default marker */
+.faqQ::-webkit-details-marker{ display:none; }
+
+/* custom indicator */
+.faqQ::after{
+  content: "+";
+  color: rgba(212,175,55,0.95);
+  font-weight: 900;
+  font-size: 18px;
+  line-height: 1;
+  opacity: 0.9;
+}
+
+.faqItem[open] .faqQ::after{
+  content: "–";
+  opacity: 0.95;
+}
+
+.faqA{
+  margin-top: 10px;
+  color: rgba(255,255,255,0.62);
+  line-height: 1.7;
+  font-size: 14px;
+}
+
+@media (min-width: 880px){
+  .wrap{ padding: 56px 20px 72px; }
+  .hero{ padding: 34px 30px; }
+  .section{ padding: 26px 28px; }
+  .h2{ font-size: 19px; }
+}

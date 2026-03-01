@@ -1,0 +1,184 @@
+.page{
+  padding: 36px 16px 60px;
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+.hero{
+  position: relative;
+  padding: 26px 18px 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 215, 120, 0.18);
+  background:
+    radial-gradient(900px 420px at 50% 0%, rgba(255, 215, 120, 0.10), transparent 60%),
+    linear-gradient(180deg, rgba(0,0,0,0.28), rgba(0,0,0,0.10));
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.35), 0 22px 60px rgba(0,0,0,0.45);
+}
+
+.h1{
+  margin: 0 0 10px;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  font-size: clamp(26px, 5vw, 34px);
+  font-weight: 650;
+  letter-spacing: 0.2px;
+  color: rgba(255,255,255,0.92);
+}
+
+.lead{
+  margin: 0 0 18px;
+  color: rgba(255,255,255,0.65);
+  font-size: 16px;
+  line-height: 1.6;
+  max-width: 58ch;
+}
+
+.primaryCta{
+  margin-top: 6px;
+}
+
+.supportBtn{
+  display: inline-flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 52px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 215, 120, 0.35);
+  background:
+    linear-gradient(180deg, rgba(255,215,120,0.18), rgba(255,215,120,0.10));
+  color: rgba(255, 220, 150, 0.95);
+  font-weight: 650;
+  font-size: 16.5px;
+  text-decoration: none;
+  box-shadow:
+    0 10px 26px rgba(0,0,0,0.45),
+    0 0 18px rgba(255, 215, 120, 0.10);
+}
+
+.supportBtn:hover{
+  border-color: rgba(255, 215, 120, 0.55);
+  box-shadow:
+    0 14px 34px rgba(0,0,0,0.52),
+    0 0 26px rgba(255, 215, 120, 0.16);
+}
+
+.micro{
+  margin-top: 10px;
+  color: rgba(255,255,255,0.52);
+  font-size: 12.5px;
+}
+
+.urgent{
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 215, 120, 0.12);
+  display: grid;
+  gap: 6px;
+}
+
+.urgentQ{
+  color: rgba(255,255,255,0.68);
+  font-size: 14px;
+}
+
+.whatsLink{
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: rgba(255, 215, 120, 0.92);
+  text-decoration: none;
+  font-weight: 650;
+  width: fit-content;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 215, 120, 0.18);
+  background: rgba(0,0,0,0.25);
+}
+
+.whatsLink:hover{
+  border-color: rgba(255, 215, 120, 0.35);
+  background: rgba(0,0,0,0.32);
+}
+
+.urgentHint{
+  color: rgba(255,255,255,0.45);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.gridWrap{
+  margin-top: 18px;
+  padding: 18px 6px 0;
+}
+
+.h2{
+  margin: 0 0 12px;
+  font-size: 16px;
+  font-weight: 650;
+  color: rgba(255,255,255,0.78);
+  letter-spacing: 0.2px;
+}
+
+.grid{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.card{
+  border-radius: 16px;
+  border: 1px solid rgba(255, 215, 120, 0.12);
+  background: rgba(0,0,0,0.20);
+  padding: 14px 14px 13px;
+  text-decoration: none;
+  box-shadow: 0 14px 34px rgba(0,0,0,0.35);
+}
+
+.card:hover{
+  border-color: rgba(255, 215, 120, 0.25);
+  background: rgba(0,0,0,0.26);
+}
+
+.cardTitle{
+  color: rgba(255,255,255,0.86);
+  font-weight: 650;
+  font-size: 14.5px;
+  margin-bottom: 6px;
+}
+
+.cardDesc{
+  color: rgba(255,255,255,0.55);
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+.trust{
+  margin-top: 18px;
+  padding: 18px 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 215, 120, 0.12);
+  background: rgba(0,0,0,0.18);
+}
+
+.trustText{
+  margin: 0;
+  color: rgba(255,255,255,0.62);
+  font-size: 14.5px;
+  line-height: 1.65;
+  max-width: 72ch;
+}
+
+.trustSmall{
+  margin-top: 10px;
+  color: rgba(255,255,255,0.45);
+  font-size: 12.5px;
+}
+
+/* Desktop tweaks */
+@media (min-width: 820px){
+  .page{ padding: 46px 20px 72px; }
+  .hero{ padding: 34px 26px 22px; }
+  .grid{ grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .supportBtn{ width: max-content; padding: 0 22px; }
+}

@@ -1,0 +1,219 @@
+.page{
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 42px 18px 80px;
+}
+
+.hero{
+  text-align: center;
+  padding: 26px 16px 18px;
+  border-radius: 18px;
+  background: radial-gradient(1200px 380px at 50% 0%, rgba(255,197,92,0.10), transparent 55%);
+}
+
+.title{
+  font-size: clamp(28px, 4vw, 44px);
+  letter-spacing: 0.2px;
+  color: #F2F2F2;
+  margin: 0 0 10px;
+  text-shadow: 0 0 18px rgba(255, 190, 75, 0.18);
+}
+
+.lead{
+  max-width: 760px;
+  margin: 0 auto 18px;
+  color: rgba(255,255,255,0.68);
+  line-height: 1.6;
+  font-size: 15px;
+}
+
+.heroCtas{
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 14px 0 14px;
+}
+
+.ctaPrimary{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 18px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 197, 92, 0.55);
+  color: #F6D58A;
+  text-decoration: none;
+  background: rgba(0,0,0,0.55);
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.55) inset, 0 8px 30px rgba(0,0,0,0.35);
+}
+
+.ctaPrimary:hover{ filter: brightness(1.05); }
+
+.ctaSecondary{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 18px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.14);
+  color: rgba(255,255,255,0.8);
+  text-decoration: none;
+  background: rgba(255,255,255,0.04);
+}
+
+.badges{
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.badge{
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,197,92,0.22);
+  color: rgba(255,255,255,0.72);
+  background: rgba(0,0,0,0.35);
+}
+
+.grid{
+  margin-top: 22px;
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 18px;
+}
+
+@media (max-width: 900px){
+  .grid{ grid-template-columns: 1fr; }
+}
+
+.card{
+  border-radius: 18px;
+  border: 1px solid rgba(255,197,92,0.16);
+  background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+  box-shadow: 0 20px 70px rgba(0,0,0,0.45);
+  padding: 18px;
+}
+
+.h2{
+  margin: 0 0 8px;
+  font-size: 18px;
+  color: rgba(255, 208, 110, 0.95);
+  text-shadow: 0 0 14px rgba(255, 190, 75, 0.14);
+}
+
+.muted{
+  margin: 0 0 14px;
+  color: rgba(255,255,255,0.62);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.form{
+  display: grid;
+  gap: 12px;
+}
+
+.label{
+  display: grid;
+  gap: 6px;
+  color: rgba(255,255,255,0.75);
+  font-size: 13px;
+}
+
+.input{
+  width: 100%;
+  border-radius: 12px;
+  padding: 12px 12px;
+  border: 1px solid rgba(255,197,92,0.18);
+  background: rgba(0,0,0,0.55);
+  color: rgba(255,255,255,0.92);
+  outline: none;
+}
+
+.input:focus{
+  border-color: rgba(255,197,92,0.42);
+  box-shadow: 0 0 0 3px rgba(255,197,92,0.10);
+}
+
+.textarea{ resize: vertical; }
+
+.checkboxRow{
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  color: rgba(255,255,255,0.65);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.submit{
+  margin-top: 4px;
+  width: 100%;
+  border-radius: 14px;
+  padding: 12px 14px;
+  border: 1px solid rgba(255,197,92,0.55);
+  background: rgba(0,0,0,0.60);
+  color: #F6D58A;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.submit:hover{ filter: brightness(1.05); }
+
+.note{
+  margin: 0;
+  color: rgba(255,255,255,0.55);
+  font-size: 12px;
+}
+
+.urgent{
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  text-decoration: none;
+  border-radius: 14px;
+  padding: 12px 14px;
+  border: 1px solid rgba(82, 196, 112, 0.55);
+  background: rgba(0,0,0,0.35);
+  color: rgba(255,255,255,0.9);
+}
+
+.divider{
+  height: 1px;
+  margin: 14px 0;
+  background: linear-gradient(90deg, transparent, rgba(255,197,92,0.20), transparent);
+}
+
+.steps{
+  margin: 0;
+  padding-left: 18px;
+  color: rgba(255,255,255,0.70);
+  line-height: 1.6;
+  font-size: 13px;
+}
+
+.faq{ display: grid; gap: 10px; }
+
+.faqItem{
+  border-radius: 14px;
+  border: 1px solid rgba(255,197,92,0.14);
+  background: rgba(0,0,0,0.35);
+  padding: 10px 12px;
+}
+
+.faqQ{
+  cursor: pointer;
+  color: rgba(255,255,255,0.82);
+  font-weight: 600;
+}
+
+.faqA{
+  margin-top: 8px;
+  color: rgba(255,255,255,0.66);
+  font-size: 13px;
+  line-height: 1.55;
+}

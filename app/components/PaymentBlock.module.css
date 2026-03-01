@@ -1,0 +1,51 @@
+.wrap {
+  width: 100%;
+  padding: 0;
+  /* CERO aire del wrapper */
+  display: grid;
+  place-items: center;
+  text-align: center;
+  background: transparent;
+  gap: 3px;
+  /* líneas bien pegadas a la imagen */
+}
+
+.divider {
+  width: min(520px, 92vw);
+  height: 1px;
+  background: linear-gradient(90deg,
+      transparent,
+      rgba(212, 175, 55, 0.45),
+      transparent);
+  opacity: 0.9;
+  margin: 0;
+  /* sin margen */
+}
+
+.imageWrap {
+  width: 100%;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  /* por si hereda */
+  padding: 0;
+}
+
+.image {
+  display: block;
+  height: auto;
+  width: clamp(248px, 68vw, 360px);
+  /* + un toque más (queda más “presente”) */
+  max-width: 360px;
+  background: transparent;
+
+  /* menos halo = se ve más compacto */
+  filter:
+    drop-shadow(0 4px 10px rgba(0, 0, 0, 0.38)) drop-shadow(0 0 10px rgba(212, 175, 55, 0.16));
+}
+
+@media (min-width: 768px) {
+  .image {
+    width: 360px;
+  }
+}

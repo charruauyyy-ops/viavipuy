@@ -1,0 +1,16 @@
+node_modules/
+.next/
+dist/
+out/
+build/
+
+.env
+.env.local
+.env.*.local
+
+attached_assets/
+# Replit / local machine noise
+.cache/
+.local/
+.replit/
+.config/
