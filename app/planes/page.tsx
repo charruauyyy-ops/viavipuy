@@ -120,26 +120,27 @@ export default function PlanesPage() {
   // Helper: fetch que manda Authorization para que los route handlers puedan validar session aunque sea localStorage.
   async function authFetch(input: RequestInfo | URL, init: RequestInit = {}) {
     const headers = new Headers(init.headers || {});
-    // Mantener JSON por defecto si no vino seteado
-    if (!headers.has("Content-Type"))
-      headers.set("Content-Type", "application/json");
 
-    // 🔥 Token fresco (evita "Bearer" vacío por state desfasado)
     const supabase = getSupabase();
     const sessionRes = supabase ? await supabase.auth.getSession() : null;
     const token = sessionRes?.data?.session?.access_token?.trim();
 
-    // ✅ Solo mandar Authorization si hay token real
     if (token) {
       headers.set("Authorization", `Bearer ${token}`);
     } else {
       headers.delete("Authorization");
     }
 
+    const isFormData = init.body instanceof FormData;
+
+    if (!isFormData && !headers.has("Content-Type")) {
+      headers.set("Content-Type", "application/json");
+    }
+
     return fetch(input, {
       ...init,
       headers,
-      credentials: "include", // 🔥 CLAVE: manda cookies (SSR/route handlers)
+      credentials: "include",
     });
   }
 

@@ -14,6 +14,43 @@ function getServiceClient() {
   });
 }
 
+async function getUserFromRequest(req: NextRequest) {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  const authHeader =
+    req.headers.get("authorization") || req.headers.get("Authorization");
+  const bearer = authHeader?.startsWith("Bearer ")
+    ? authHeader.slice(7).trim()
+    : null;
+
+  // 1) Authorization header
+  if (bearer && url && anon) {
+    const supa = createClient(url, anon, {
+      auth: { persistSession: false, autoRefreshToken: false },
+      global: { headers: { Authorization: `Bearer ${bearer}` } },
+    });
+    const { data, error } = await supa.auth.getUser();
+    if (!error && data?.user) return data.user;
+  }
+
+  // 2) Cookies/session fallback
+  const res = NextResponse.json({});
+  const supabase = getRouteSupabase(req, res);
+  const { data } = await supabase.auth.getUser();
+  return data?.user ?? null;
+}
+
+type PendingPagoRow = {
+  id: string;
+  metodo_pago: string;
+  estado_pago: string;
+  plan_nombre: string | null;
+  plan_duracion_dias: number | null;
+  publicacion_id: string | null;
+  mp_preference_id: string | null;
+};
+
 export async function POST(req: NextRequest) {
   try {
     const mpToken = process.env.MP_ACCESS_TOKEN;
@@ -24,46 +61,23 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Auth (robusto: Header + Cookies)
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-    let user = null;
-    const authHeader = req.headers.get("authorization") || req.headers.get("Authorization");
-    const bearer = authHeader?.startsWith("Bearer ") ? authHeader.slice(7).trim() : null;
-
-    if (bearer && url && anon) {
-      const supa = createClient(url, anon, {
-        auth: { persistSession: false, autoRefreshToken: false },
-        global: { headers: { Authorization: `Bearer ${bearer}` } },
-      });
-      const { data, error } = await supa.auth.getUser();
-      if (!error && data?.user) user = data.user;
-    }
-
-    if (!user) {
-      const res = NextResponse.json({});
-      const supabase = getRouteSupabase(req, res);
-      const { data } = await supabase.auth.getUser();
-      user = data?.user;
-    }
-
+    // Auth
+    const user = await getUserFromRequest(req);
     if (!user) {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 });
     }
 
-    const body = await req.json().catch(() => ({}));
+    const body = await req.json().catch(() => ({}) as any);
     const plan_id = String(body?.plan_id ?? "");
     const duracion_dias = Number(body?.duracion_dias);
+    const publicacion_id: string | null = body?.publicacion_id ?? null;
 
     if (!plan_id || !duracion_dias) {
       return NextResponse.json({ error: "Faltan campos" }, { status: 400 });
     }
-
     if (!PLANS?.[plan_id] || plan_id === "free") {
       return NextResponse.json({ error: "Plan invalido" }, { status: 400 });
     }
-
     const validDurations = [7, 30, 90];
     if (!validDurations.includes(duracion_dias)) {
       return NextResponse.json({ error: "Duracion invalida" }, { status: 400 });
@@ -85,45 +99,97 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const planName =
+    const planName: string =
       (PLANS as any)?.[plan_id]?.name ||
       (PLANS as any)?.[plan_id]?.titulo ||
       plan_id;
 
-    // ✅ Insert SOLO con columnas reales de pagos_viavip
-    const insertPayload: any = {
-      user_id: user.id,
-      tipo: "plan",
-      metodo_pago: "mercadopago",
-      monto,
-      moneda: "UYU",
-      estado: "pendiente",
-      estado_pago: "pendiente",
-      plan_nombre: planName,
-      plan_duracion_dias: duracion_dias
-    };
-
-    if (body?.publicacion_id) {
-      insertPayload.publicacion_id = body.publicacion_id;
-    }
-
-    const { data: pago, error: insertErr } = await sc
+    // =========================
+    // IDEMPOTENCIA (modo A)
+    // - Reusar pago pendiente existente si es mercadopago
+    // - Si existe pendiente de otro método, devolvemos 409
+    // =========================
+    const { data: anyPending, error: anyPendingErr } = await sc
       .from("pagos_viavip")
-      .insert(insertPayload)
-      .select("id")
-      .single();
+      .select(
+        "id, metodo_pago, estado_pago, plan_nombre, plan_duracion_dias, publicacion_id, mp_preference_id",
+      )
+      .eq("user_id", user.id)
+      .eq("tipo", "plan")
+      .eq("plan_nombre", planName)
+      .eq("plan_duracion_dias", duracion_dias)
+      .is("publicacion_id", publicacion_id)
+      .in("estado_pago", ["pendiente", "en_espera"])
+      .order("created_at", { ascending: false })
+      .limit(1);
 
-    if (insertErr || !pago?.id) {
-      console.error("DB insert pago error:", insertErr);
+    if (anyPendingErr) {
+      console.error("DB select pending error:", anyPendingErr);
       return NextResponse.json(
-        {
-          error: "Error al crear pago",
-          details: insertErr?.message ?? insertErr,
-        },
+        { error: "Error interno", details: anyPendingErr.message },
         { status: 500 },
       );
     }
 
+    const pending: PendingPagoRow | null =
+      (anyPending?.[0] as PendingPagoRow | undefined) ?? null;
+
+    if (pending && pending.metodo_pago !== "mercadopago") {
+      return NextResponse.json(
+        {
+          error: "Ya existe un pago pendiente",
+          existing: {
+            pago_id: pending.id,
+            metodo_pago: pending.metodo_pago,
+            estado_pago: pending.estado_pago,
+          },
+        },
+        { status: 409 },
+      );
+    }
+
+    // Reusar si existe, crear si no existe (pagoId SIEMPRE string)
+    let reused = false;
+    let pagoId: string;
+
+    if (pending?.id) {
+      pagoId = pending.id;
+      reused = true;
+    } else {
+      const insertPayload = {
+        user_id: user.id,
+        tipo: "plan",
+        metodo_pago: "mercadopago",
+        monto,
+        moneda: "UYU",
+        estado: "pendiente",
+        estado_pago: "pendiente",
+        plan_nombre: planName,
+        plan_duracion_dias: duracion_dias,
+        publicacion_id,
+      };
+
+      const { data: pago, error: insertErr } = await sc
+        .from("pagos_viavip")
+        .insert(insertPayload)
+        .select("id")
+        .single();
+
+      if (insertErr || !pago?.id) {
+        console.error("DB insert pago error:", insertErr);
+        return NextResponse.json(
+          {
+            error: "Error al crear pago",
+            details: insertErr?.message ?? insertErr,
+          },
+          { status: 500 },
+        );
+      }
+
+      pagoId = pago.id as string;
+    }
+
+    // MP preference (regenerable sin reinsertar pago)
     const host = req.headers.get("host");
     const siteUrl =
       process.env.NEXT_PUBLIC_SITE_URL || (host ? `https://${host}` : "");
@@ -134,31 +200,30 @@ export async function POST(req: NextRequest) {
     const durationLabel =
       duracion_dias === 90 ? "3 meses" : `${duracion_dias} dias`;
 
-    // ✅ SDK: siempre mandar { body: {...} }
     const prefResp: any = await preference.create({
       body: {
         items: [
           {
-            id: pago.id,
+            id: pagoId,
             title: `VIAVIP Plan ${planName} - ${durationLabel}`,
             quantity: 1,
             unit_price: Number(monto),
             currency_id: "UYU",
           },
         ],
-        external_reference: pago.id,
+        external_reference: pagoId,
         back_urls: {
-          success: `${siteUrl}/planes?pago=ok&id=${pago.id}`,
+          success: `${siteUrl}/planes?pago=ok&id=${pagoId}`,
           failure: `${siteUrl}/planes?pago=error`,
-          pending: `${siteUrl}/planes?pago=pendiente&id=${pago.id}`,
+          pending: `${siteUrl}/planes?pago=pendiente&id=${pagoId}`,
         },
         auto_return: "approved",
         notification_url: `${siteUrl}/api/pagos/webhook`,
       },
     });
 
-    const prefId = prefResp?.body?.id ?? prefResp?.id ?? null;
-    const initPoint =
+    const prefId: string | null = prefResp?.body?.id ?? prefResp?.id ?? null;
+    const initPoint: string | null =
       prefResp?.body?.init_point ?? prefResp?.init_point ?? null;
 
     if (!initPoint) {
@@ -169,25 +234,22 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // ✅ Guardar mp_preference_id SOLO si existe (si no existe, no rompemos)
     if (prefId) {
       const upd = await sc
         .from("pagos_viavip")
         .update({ mp_preference_id: prefId })
-        .eq("id", pago.id);
+        .eq("id", pagoId);
 
       if (upd.error) {
         // No frenamos el checkout por esto
-        console.warn(
-          "No se pudo guardar mp_preference_id:",
-          upd.error?.message,
-        );
+        console.warn("No se pudo guardar mp_preference_id:", upd.error.message);
       }
     }
 
     return NextResponse.json({
-      pago_id: pago.id,
+      pago_id: pagoId,
       init_point: initPoint,
+      reused,
     });
   } catch (err: any) {
     console.error("Error en /api/pagos/mercadopago:", err);
