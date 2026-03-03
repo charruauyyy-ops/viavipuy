@@ -120,6 +120,67 @@ export default function MiCuentaPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [showPagoModal, setShowPagoModal] = useState(false);
+  const [pagoDuracion, setPagoDuracion] = useState<number>(30);
+  const [processingPago, setProcessingPago] = useState(false);
+
+  async function handlePagarPublicacion(metodo: "mercadopago" | "manual") {
+    if (!pub || !userId) return;
+    setProcessingPago(true);
+    try {
+      const supabase = getSupabase();
+      const { data: session } = await supabase!.auth.getSession();
+      const token = session?.session?.access_token;
+      
+      if (metodo === "mercadopago") {
+        const res = await fetch("/api/pagos/mercadopago", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({
+            tipo: "publicacion",
+            publicacion_id: pub.id,
+            publicacion_duracion_dias: pagoDuracion,
+          }),
+        });
+        const data = await res.json();
+        if (data.init_point) {
+          window.location.href = data.init_point;
+          return;
+        }
+        alert(data.error || "Error al iniciar pago");
+      } else {
+        const monto = pagoDuracion === 30 ? 250 : pagoDuracion === 60 ? 500 : 750;
+        const res = await fetch("/api/pagos/crear", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({
+            tipo: "publicacion",
+            publicacion_id: pub.id,
+            publicacion_duracion_dias: pagoDuracion,
+            publicacion_monto: monto,
+            metodo_pago: "abitab",
+          }),
+        });
+        const data = await res.json();
+        if (data.pago_id) {
+          router.push(`/planes?pago=manual&id=${data.pago_id}`);
+        } else {
+          alert(data.error || "Error al crear pago");
+        }
+      }
+    } catch (e) {
+      alert("Error de conexion");
+    } finally {
+      setProcessingPago(false);
+    }
+  }
+
   const [authError, setAuthError] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState("");
   const [resending, setResending] = useState(false);
@@ -1053,6 +1114,14 @@ export default function MiCuentaPage() {
                     })()}
                   </div>
                 )}
+                
+                <button 
+                  className="vv-btn" 
+                  style={{ width: '100%', marginTop: 12, background: 'linear-gradient(90deg, #b68a2a, #f3d77d, #b68a2a)', color: '#000', fontWeight: 'bold' }}
+                  onClick={() => setShowPagoModal(true)}
+                >
+                  Pagar publicación
+                </button>
               </>
             ) : (
               <div style={{ padding: '10px 0' }}>
@@ -1825,6 +1894,57 @@ export default function MiCuentaPage() {
           Volver al inicio
         </a>
       </div>
+
+      {showPagoModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div style={{ background: '#141414', border: '1px solid #c6a75e44', borderRadius: 16, maxWidth: 400, width: '100%', padding: 24, position: 'relative' }}>
+            <button 
+              style={{ position: 'absolute', top: 12, right: 12, background: 'none', border: 'none', color: '#888', fontSize: 20, cursor: 'pointer' }}
+              onClick={() => setShowPagoModal(false)}
+            >✕</button>
+            <h2 style={{ fontSize: 18, color: '#f2f2f2', marginBottom: 4 }}>Pagar publicación</h2>
+            <p style={{ fontSize: 13, color: '#888', marginBottom: 20 }}>Elegi la duracion de tu publicacion</p>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
+              {[30, 60, 90].map(d => (
+                <button 
+                  key={d}
+                  onClick={() => setPagoDuracion(d)}
+                  style={{ 
+                    padding: '12px 16px', borderRadius: 10, border: '1px solid', 
+                    borderColor: pagoDuracion === d ? '#c6a75e' : 'rgba(255,255,255,0.08)',
+                    background: pagoDuracion === d ? 'rgba(198,167,94,0.1)' : 'rgba(255,255,255,0.03)',
+                    color: pagoDuracion === d ? '#c6a75e' : '#f2f2f2',
+                    textAlign: 'left', cursor: 'pointer', transition: '0.2s'
+                  }}
+                >
+                  <div style={{ fontWeight: 'bold' }}>{d} días</div>
+                  <div style={{ fontSize: 12, opacity: 0.8 }}>${d === 30 ? '250' : d === 60 ? '500' : '750'} UYU</div>
+                </button>
+              ))}
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <button 
+                className="vv-btn" 
+                style={{ width: '100%', background: '#0084ff', border: 'none' }}
+                disabled={processingPago}
+                onClick={() => handlePagarPublicacion('mercadopago')}
+              >
+                {processingPago ? 'Procesando...' : 'Pagar con MercadoPago'}
+              </button>
+              <button 
+                className="vv-btn" 
+                style={{ width: '100%' }}
+                disabled={processingPago}
+                onClick={() => handlePagarPublicacion('manual')}
+              >
+                {processingPago ? 'Procesando...' : 'Otros medios (Abitab/RedPagos)'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

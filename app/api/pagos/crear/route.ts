@@ -60,9 +60,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "SUPABASE_SERVICE_ROLE_KEY missing" }, { status: 500 });
     }
 
-    // ────────────────────────────────────────────────────────
-    // FLUJO PUBLICACIÓN (NUEVO)
-    // ────────────────────────────────────────────────────────
     if (tipo === "publicacion") {
       if (!publicacion_id || !publicacion_duracion_dias || !publicacion_monto || !metodo_pago) {
         return NextResponse.json({ error: "Faltan campos para publicacion" }, { status: 400 });
@@ -75,7 +72,7 @@ export async function POST(req: NextRequest) {
 
       const { data: existingList } = await sc
         .from("pagos_viavip")
-        .select("id, metodo_pago, estado_pago, publicacion_id, plan_duracion_dias, monto, moneda")
+        .select("id, metodo_pago, estado_pago, publicacion_id, publicacion_duracion_dias, publicacion_monto, moneda")
         .eq("user_id", user.id)
         .eq("tipo", "publicacion")
         .eq("publicacion_id", publicacion_id)
@@ -90,8 +87,8 @@ export async function POST(req: NextRequest) {
           .from("pagos_viavip")
           .update({ 
             metodo_pago, 
-            plan_duracion_dias: Number(publicacion_duracion_dias), 
-            monto: Number(publicacion_monto) 
+            publicacion_duracion_dias: Number(publicacion_duracion_dias), 
+            publicacion_monto: Number(publicacion_monto) 
           })
           .eq("id", existing.id);
 
@@ -122,8 +119,8 @@ export async function POST(req: NextRequest) {
           estado: "pendiente",
           estado_pago: "pendiente",
           publicacion_id,
-          plan_duracion_dias: Number(publicacion_duracion_dias),
-          monto: Number(publicacion_monto)
+          publicacion_duracion_dias: Number(publicacion_duracion_dias),
+          publicacion_monto: Number(publicacion_monto)
         })
         .select("id")
         .single();
@@ -145,9 +142,6 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // ────────────────────────────────────────────────────────
-    // FLUJO PLAN (EXISTENTE)
-    // ────────────────────────────────────────────────────────
     if (!plan_id || !duracion_dias || !metodo_pago) {
       return NextResponse.json({ error: "Faltan campos" }, { status: 400 });
     }
