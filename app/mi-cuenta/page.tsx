@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getSupabase } from "@/lib/supabaseClient";
@@ -54,7 +54,14 @@ interface PubData {
   expires_at?: string;
 }
 
-const CATEGORIA_ORDER = ["servicios", "sexo_oral", "fantasias", "virtuales", "masajes", "idiomas"] as const;
+const CATEGORIA_ORDER = [
+  "servicios",
+  "sexo_oral",
+  "fantasias",
+  "virtuales",
+  "masajes",
+  "idiomas",
+] as const;
 
 const CATEGORIA_TITLES: Record<string, string> = {
   servicios: "Servicios",
@@ -124,12 +131,81 @@ export default function MiCuentaPage() {
   const [pagoDuracion, setPagoDuracion] = useState<number>(30);
   const [processingPago, setProcessingPago] = useState(false);
 
-  async function handlePagarPublicacion(metodo: "mercadopago" | "abitab" | "redpagos" | "transferencia") {
+  // Pago manual (publicación) - sin redirecciones
+  const [manualPagoId, setManualPagoId] = useState<string | null>(null);
+  const [manualMetodo, setManualMetodo] = useState<
+    "abitab" | "redpagos" | "transferencia" | null
+  >(null);
+  const [manualComprobanteOk, setManualComprobanteOk] = useState(false);
+  const [manualUploadLoading, setManualUploadLoading] = useState(false);
+  const [manualMsg, setManualMsg] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  function manualInstrucciones(m: "abitab" | "redpagos" | "transferencia") {
+    if (m === "abitab")
+      return [
+        "Pagá en Abitab con el monto indicado.",
+        "Guardá el comprobante y subilo acá.",
+      ];
+    if (m === "redpagos")
+      return [
+        "Pagá en RedPagos con el monto indicado.",
+        "Guardá el comprobante y subilo acá.",
+      ];
+    return [
+      "Realizá la transferencia con el monto indicado.",
+      "Guardá el comprobante y subilo acá.",
+    ];
+  }
+
+  async function subirComprobanteManual(pagoId: string) {
+    if (!fileInputRef.current?.files?.[0]) {
+      setManualMsg("Seleccioná un archivo primero.");
+      return;
+    }
+    setManualUploadLoading(true);
+    setManualMsg(null);
+
+    try {
+      const supabase = getSupabase();
+      const { data: session } = await supabase!.auth.getSession();
+      const token = session?.session?.access_token;
+
+      const formData = new FormData();
+      formData.append("pago_id", pagoId);
+      formData.append("comprobante", fileInputRef.current.files[0]);
+
+      const res = await fetch("/api/pagos/comprobante", {
+        method: "POST",
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (data.ok) {
+        setManualComprobanteOk(true);
+        setManualMsg("Comprobante enviado. Queda en revisión.");
+      } else {
+        setManualMsg(data.error || "Error al subir comprobante");
+      }
+    } catch (e) {
+      setManualMsg("Error de conexión");
+    } finally {
+      setManualUploadLoading(false);
+    }
+  }
+
+  async function handlePagarPublicacion(
+    metodo: "mercadopago" | "abitab" | "redpagos" | "transferencia",
+  ) {
     if (!pub || !userId) return;
     setProcessingPago(true);
 
     try {
-      const pubMonto = pagoDuracion === 30 ? 250 : pagoDuracion === 60 ? 500 : 750;
+      const pubMonto =
+        pagoDuracion === 30 ? 250 : pagoDuracion === 60 ? 500 : 750;
       const supabase = getSupabase();
       const { data: session } = await supabase!.auth.getSession();
       const token = session?.session?.access_token;
@@ -171,7 +247,11 @@ export default function MiCuentaPage() {
         });
         const data = await res.json();
         if (data.pago_id) {
-          router.push(`/planes?pago=manual&id=${data.pago_id}`);
+          // No redirigir: mantener flujo manual dentro de /mi-cuenta
+          setManualPagoId(data.pago_id);
+          setManualMetodo(metodo);
+          setManualComprobanteOk(false);
+          setManualMsg(null);
         } else {
           alert(data.error || "Error al crear pago");
         }
@@ -205,7 +285,9 @@ export default function MiCuentaPage() {
     idiomas: [],
   });
   const [saving, setSaving] = useState(false);
-  const [serviciosCatalog, setServiciosCatalog] = useState<Record<string, string[]>>({});
+  const [serviciosCatalog, setServiciosCatalog] = useState<
+    Record<string, string[]>
+  >({});
   const [serviciosLoading, setServiciosLoading] = useState(false);
   const [serviciosError, setServiciosError] = useState<string | null>(null);
   const [saveMsg, setSaveMsg] = useState<{
@@ -302,7 +384,9 @@ export default function MiCuentaPage() {
       const supabase = getSupabase();
       if (!supabase) return;
       try {
-        const { data, error } = await supabase.rpc("notificaciones_unread_count");
+        const { data, error } = await supabase.rpc(
+          "notificaciones_unread_count",
+        );
         if (!error && typeof data === "number") {
           setNotifCount(data);
         }
@@ -318,7 +402,8 @@ export default function MiCuentaPage() {
       }
     };
     document.addEventListener("visibilitychange", handleVisibility);
-    return () => document.removeEventListener("visibilitychange", handleVisibility);
+    return () =>
+      document.removeEventListener("visibilitychange", handleVisibility);
   }, [userId, mounted]);
 
   useEffect(() => {
@@ -424,7 +509,7 @@ export default function MiCuentaPage() {
         setDisponibleSwitch(
           (p as any).disponible_manual != null
             ? !!(p as any).disponible_manual
-            : p.disponible !== false
+            : p.disponible !== false,
         );
         setTags({
           servicios: asArr(p.servicios),
@@ -446,10 +531,15 @@ export default function MiCuentaPage() {
     async function fetchOpiniones() {
       setOpinionesLoading(true);
       const supabase = getSupabase();
-      if (!supabase) { setOpinionesLoading(false); return; }
+      if (!supabase) {
+        setOpinionesLoading(false);
+        return;
+      }
       const { data } = await supabase
         .from("opiniones")
-        .select("id, comentario, rating, autor, status, created_at, respuesta, respondida_at")
+        .select(
+          "id, comentario, rating, autor, status, created_at, respuesta, respondida_at",
+        )
         .eq("publicacion_id", pub!.id)
         .order("created_at", { ascending: false });
       setOpiniones((data || []) as OpinionItem[]);
@@ -479,11 +569,19 @@ export default function MiCuentaPage() {
         setOpiniones((prev) =>
           prev.map((o) =>
             o.id === opinionId
-              ? { ...o, respuesta: text, respondida_at: new Date().toISOString() }
+              ? {
+                  ...o,
+                  respuesta: text,
+                  respondida_at: new Date().toISOString(),
+                }
               : o,
           ),
         );
-        setReplyDrafts((d) => { const n = { ...d }; delete n[opinionId]; return n; });
+        setReplyDrafts((d) => {
+          const n = { ...d };
+          delete n[opinionId];
+          return n;
+        });
       }
     } finally {
       setReplyingSaving(null);
@@ -571,7 +669,10 @@ export default function MiCuentaPage() {
       ...tags.servicios_virtuales,
       ...tags.tipos_masajes,
     ]);
-    if (tags.servicios_virtuales.length > 0 && !serviciosFinal.includes("Virtual")) {
+    if (
+      tags.servicios_virtuales.length > 0 &&
+      !serviciosFinal.includes("Virtual")
+    ) {
       serviciosFinal.push("Virtual");
     }
 
@@ -858,14 +959,35 @@ export default function MiCuentaPage() {
     <main className="vv-form-page">
       <div className="vv-form-container">
         <div className="vv-form-header">
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", width: "100%" }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "flex-start",
+              width: "100%",
+            }}
+          >
             <div>
               <h1 className="vv-form-title">Mi Cuenta</h1>
               <p className="vv-form-subtitle">{userEmail}</p>
             </div>
             {userId && (
-              <Link href="/notificaciones" style={{ position: "relative", color: "#c6a75e", padding: "8px" }} data-testid="link-notifications">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 24, height: 24 }}>
+              <Link
+                href="/notificaciones"
+                style={{
+                  position: "relative",
+                  color: "#c6a75e",
+                  padding: "8px",
+                }}
+                data-testid="link-notifications"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  style={{ width: 24, height: 24 }}
+                >
                   <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
                   <path d="M13.73 21a2 2 0 01-3.46 0" />
                 </svg>
@@ -1023,30 +1145,40 @@ export default function MiCuentaPage() {
                 <span
                   className={`vv-cuenta-plan-estado ${isExpired || planEstado === "vencido" ? "vv-cuenta-plan-vencido" : planEstado === "activo" ? "vv-cuenta-plan-activo" : ""}`}
                 >
-                  {isExpired ? "Vencido" : estadoLabel[planEstado] || planEstado}
+                  {isExpired
+                    ? "Vencido"
+                    : estadoLabel[planEstado] || planEstado}
                 </span>
               )}
             </div>
             {planFin && (
-              <p 
-                className="vv-cuenta-plan-vence" 
-                style={{ 
-                  fontSize: "13px", 
-                  marginTop: 4, 
-                  color: planState.status === "danger" ? "#ff4d4f" : planState.status === "warning" ? "#f5c518" : "#888" 
+              <p
+                className="vv-cuenta-plan-vence"
+                style={{
+                  fontSize: "13px",
+                  marginTop: 4,
+                  color:
+                    planState.status === "danger"
+                      ? "#ff4d4f"
+                      : planState.status === "warning"
+                        ? "#f5c518"
+                        : "#888",
                 }}
               >
-                {planState.status === "expired" ? "Venció el" : "Vence el"}: {mounted ? planFin.toLocaleDateString('es-UY', { day: '2-digit', month: '2-digit', year: 'numeric' }) : planFin.toISOString().split('T')[0]}
+                {planState.status === "expired" ? "Venció el" : "Vence el"}:{" "}
+                {mounted
+                  ? planFin.toLocaleDateString("es-UY", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                    })
+                  : planFin.toISOString().split("T")[0]}
               </p>
             )}
 
             <div className="vv-cuenta-plan-limits">
-              <span>
-                Fotos: hasta 25
-              </span>
-              <span>
-                Videos: hasta 15
-              </span>
+              <span>Fotos: hasta 25</span>
+              <span>Videos: hasta 15</span>
               <span>
                 Metricas:{" "}
                 {planConfig.metricas_avanzadas
@@ -1073,62 +1205,122 @@ export default function MiCuentaPage() {
         <div className="vv-cuenta-section">
           <h2 className="vv-cuenta-label">Publicación</h2>
           <div className="vv-cuenta-plan-card">
-            {pub && (pub.estado === 'activo' || pubState.status === 'expired') ? (
+            {pub &&
+            (pub.estado === "activo" || pubState.status === "expired") ? (
               <>
                 <div className="vv-cuenta-plan-header">
                   {pubState.status === "expired" ? (
                     <span className="vv-cuenta-plan-vencido">VENCIDA</span>
                   ) : (
-                    <span className="vv-admin-status vv-admin-status-approved" style={{ padding: '2px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold' }}>
+                    <span
+                      className="vv-admin-status vv-admin-status-approved"
+                      style={{
+                        padding: "2px 8px",
+                        borderRadius: "4px",
+                        fontSize: "12px",
+                        fontWeight: "bold",
+                      }}
+                    >
                       Activa
                     </span>
                   )}
-                  {mounted && pub.expires_at && pubState.status !== "expired" && pubState.status !== "ok" && (
-                    <span style={{ color: pubState.status === "danger" ? "#ff4d4f" : "#c6a75e", fontSize: '12px', fontWeight: 'bold' }}>
-                      Por vencer
-                    </span>
-                  )}
+                  {mounted &&
+                    pub.expires_at &&
+                    pubState.status !== "expired" &&
+                    pubState.status !== "ok" && (
+                      <span
+                        style={{
+                          color:
+                            pubState.status === "danger"
+                              ? "#ff4d4f"
+                              : "#c6a75e",
+                          fontSize: "12px",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        Por vencer
+                      </span>
+                    )}
                 </div>
                 {pub.expires_at && (
                   <div style={{ marginTop: 8 }}>
-                    <p 
-                      style={{ 
-                        fontSize: "13px", 
-                        color: pubState.status === "danger" ? "#ff4d4f" : pubState.status === "warning" ? "#f5c518" : "#888" 
+                    <p
+                      style={{
+                        fontSize: "13px",
+                        color:
+                          pubState.status === "danger"
+                            ? "#ff4d4f"
+                            : pubState.status === "warning"
+                              ? "#f5c518"
+                              : "#888",
                       }}
                     >
-                      {pubState.status === "expired" ? "Venció el" : "Vence el"}: {mounted ? new Date(pub.expires_at).toLocaleDateString('es-UY', { day: '2-digit', month: '2-digit', year: 'numeric' }) : pub.expires_at.split('T')[0]}
+                      {pubState.status === "expired" ? "Venció el" : "Vence el"}
+                      :{" "}
+                      {mounted
+                        ? new Date(pub.expires_at).toLocaleDateString("es-UY", {
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "numeric",
+                          })
+                        : pub.expires_at.split("T")[0]}
                     </p>
-                    {mounted && (() => {
-                      const diff = new Date(pub.expires_at).getTime() - Date.now();
-                      const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
-                      return (
-                        <p 
-                          style={{ 
-                            fontSize: "13px", 
-                            marginTop: 4, 
-                            color: pubState.status === "danger" ? "#ff4d4f" : pubState.status === "warning" ? "#f5c518" : "#888" 
-                          }}
-                        >
-                          Quedan: {days < 0 ? '0' : days} días
-                        </p>
-                      );
-                    })()}
+                    {mounted &&
+                      (() => {
+                        const diff =
+                          new Date(pub.expires_at).getTime() - Date.now();
+                        const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+                        return (
+                          <p
+                            style={{
+                              fontSize: "13px",
+                              marginTop: 4,
+                              color:
+                                pubState.status === "danger"
+                                  ? "#ff4d4f"
+                                  : pubState.status === "warning"
+                                    ? "#f5c518"
+                                    : "#888",
+                            }}
+                          >
+                            Quedan: {days < 0 ? "0" : days} días
+                          </p>
+                        );
+                      })()}
                   </div>
                 )}
-                
-                <button 
-                  className="vv-btn" 
-                  style={{ width: '100%', marginTop: 12, background: 'linear-gradient(90deg, #b68a2a, #f3d77d, #b68a2a)', color: '#000', fontWeight: 'bold' }}
+
+                <button
+                  className="vv-btn"
+                  style={{
+                    width: "100%",
+                    marginTop: 12,
+                    background:
+                      "linear-gradient(90deg, #b68a2a, #f3d77d, #b68a2a)",
+                    color: "#000",
+                    fontWeight: "bold",
+                  }}
                   onClick={() => setShowPagoModal(true)}
                 >
                   Pagar publicación
                 </button>
               </>
             ) : (
-              <div style={{ padding: '10px 0' }}>
-                <p style={{ color: '#888', fontSize: '14px', marginBottom: 12 }}>Sin publicación activa</p>
-                <Link href="/publicar" className="vv-btn" style={{ display: 'inline-block', fontSize: '13px', padding: '6px 16px' }}>
+              <div style={{ padding: "10px 0" }}>
+                <p
+                  style={{ color: "#888", fontSize: "14px", marginBottom: 12 }}
+                >
+                  Sin publicación activa
+                </p>
+                <Link
+                  href="/publicar"
+                  className="vv-btn"
+                  style={{
+                    display: "inline-block",
+                    fontSize: "13px",
+                    padding: "6px 16px",
+                  }}
+                >
                   {pub ? "Reactivar publicación" : "Crear publicación"}
                 </Link>
               </div>
@@ -1281,7 +1473,9 @@ export default function MiCuentaPage() {
                 {serviciosError ? (
                   <div className="vv-form-error-box">{serviciosError}</div>
                 ) : serviciosLoading ? (
-                  <div style={{ color: "rgba(255,255,255,0.6)" }}>Cargando servicios...</div>
+                  <div style={{ color: "rgba(255,255,255,0.6)" }}>
+                    Cargando servicios...
+                  </div>
                 ) : (
                   CATEGORIA_ORDER.map((cat) => {
                     const opts = serviciosCatalog[cat] || [];
@@ -1293,7 +1487,9 @@ export default function MiCuentaPage() {
                         fieldLabel={CATEGORIA_TITLES[cat] || cat}
                         options={opts}
                         selected={tags[pubField] || []}
-                        onChange={(vals) => setTags((prev) => ({ ...prev, [pubField]: vals }))}
+                        onChange={(vals) =>
+                          setTags((prev) => ({ ...prev, [pubField]: vals }))
+                        }
                         testPrefix={`chip-${cat}`}
                       />
                     );
@@ -1618,11 +1814,10 @@ export default function MiCuentaPage() {
               </div>
             </div>
             <div className="vv-contact-toggles" style={{ marginTop: 10 }}>
-              <label
-                className="vv-toggle-row"
-                data-testid="row-mostrar-precio"
-              >
-                <span className="vv-toggle-text">Mostrar precio en tarjeta</span>
+              <label className="vv-toggle-row" data-testid="row-mostrar-precio">
+                <span className="vv-toggle-text">
+                  Mostrar precio en tarjeta
+                </span>
                 <input
                   type="checkbox"
                   className="vv-toggle-input"
@@ -1752,11 +1947,17 @@ export default function MiCuentaPage() {
           <div className="vv-cuenta-section">
             <h2 className="vv-cuenta-label">Opiniones recibidas</h2>
             {opinionesLoading ? (
-              <p style={{ color: "var(--text-secondary)", fontSize: 13 }}>Cargando opiniones...</p>
+              <p style={{ color: "var(--text-secondary)", fontSize: 13 }}>
+                Cargando opiniones...
+              </p>
             ) : opiniones.length === 0 ? (
-              <p style={{ color: "var(--text-tertiary)", fontSize: 13 }}>No hay opiniones todavia.</p>
+              <p style={{ color: "var(--text-tertiary)", fontSize: 13 }}>
+                No hay opiniones todavia.
+              </p>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <div
+                style={{ display: "flex", flexDirection: "column", gap: 14 }}
+              >
                 {opiniones.map((op) => (
                   <div
                     key={op.id}
@@ -1768,60 +1969,134 @@ export default function MiCuentaPage() {
                     }}
                     data-testid={`opinion-card-${op.id}`}
                   >
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                      <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        marginBottom: 6,
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: 13,
+                          fontWeight: 600,
+                          color: "var(--text-primary)",
+                        }}
+                      >
                         {op.autor}
                       </span>
-                      <span style={{ fontSize: 11, color: "var(--text-tertiary)" }}>
+                      <span
+                        style={{ fontSize: 11, color: "var(--text-tertiary)" }}
+                      >
                         {new Date(op.created_at).toLocaleDateString("es-UY")}
                       </span>
                     </div>
-                    <div style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 6 }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: 6,
+                        alignItems: "center",
+                        marginBottom: 6,
+                      }}
+                    >
                       <span style={{ color: "var(--gold)", fontSize: 13 }}>
-                        {"★".repeat(op.rating)}{"☆".repeat(5 - op.rating)}
+                        {"★".repeat(op.rating)}
+                        {"☆".repeat(5 - op.rating)}
                       </span>
-                      <span style={{
-                        fontSize: 10,
-                        padding: "2px 8px",
-                        borderRadius: 6,
-                        background: op.status === "approved" ? "rgba(80,200,120,0.12)" : "rgba(255,200,50,0.12)",
-                        color: op.status === "approved" ? "rgba(80,200,120,0.9)" : "rgba(255,200,50,0.9)",
-                        fontWeight: 600,
-                        textTransform: "uppercase",
-                      }}>
+                      <span
+                        style={{
+                          fontSize: 10,
+                          padding: "2px 8px",
+                          borderRadius: 6,
+                          background:
+                            op.status === "approved"
+                              ? "rgba(80,200,120,0.12)"
+                              : "rgba(255,200,50,0.12)",
+                          color:
+                            op.status === "approved"
+                              ? "rgba(80,200,120,0.9)"
+                              : "rgba(255,200,50,0.9)",
+                          fontWeight: 600,
+                          textTransform: "uppercase",
+                        }}
+                      >
                         {op.status}
                       </span>
                     </div>
-                    <p style={{ fontSize: 13, color: "var(--text-secondary)", margin: "0 0 8px", lineHeight: 1.5 }}>
+                    <p
+                      style={{
+                        fontSize: 13,
+                        color: "var(--text-secondary)",
+                        margin: "0 0 8px",
+                        lineHeight: 1.5,
+                      }}
+                    >
                       {op.comentario}
                     </p>
 
                     {op.respuesta && (
-                      <div style={{
-                        background: "rgba(198,167,94,0.06)",
-                        border: "1px solid rgba(198,167,94,0.15)",
-                        borderRadius: 8,
-                        padding: "10px 12px",
-                        marginBottom: 8,
-                      }}>
-                        <span style={{ fontSize: 11, fontWeight: 600, color: "var(--gold)", display: "block", marginBottom: 4 }}>
+                      <div
+                        style={{
+                          background: "rgba(198,167,94,0.06)",
+                          border: "1px solid rgba(198,167,94,0.15)",
+                          borderRadius: 8,
+                          padding: "10px 12px",
+                          marginBottom: 8,
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontSize: 11,
+                            fontWeight: 600,
+                            color: "var(--gold)",
+                            display: "block",
+                            marginBottom: 4,
+                          }}
+                        >
                           Tu respuesta
                           {op.respondida_at && (
-                            <span style={{ fontWeight: 400, color: "var(--text-tertiary)", marginLeft: 8 }}>
-                              {new Date(op.respondida_at).toLocaleDateString("es-UY")}
+                            <span
+                              style={{
+                                fontWeight: 400,
+                                color: "var(--text-tertiary)",
+                                marginLeft: 8,
+                              }}
+                            >
+                              {new Date(op.respondida_at).toLocaleDateString(
+                                "es-UY",
+                              )}
                             </span>
                           )}
                         </span>
-                        <p style={{ fontSize: 13, color: "var(--text-secondary)", margin: 0, lineHeight: 1.4 }}>
+                        <p
+                          style={{
+                            fontSize: 13,
+                            color: "var(--text-secondary)",
+                            margin: 0,
+                            lineHeight: 1.4,
+                          }}
+                        >
                           {op.respuesta}
                         </p>
                       </div>
                     )}
 
-                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 8,
+                      }}
+                    >
                       <textarea
                         value={replyDrafts[op.id] ?? op.respuesta ?? ""}
-                        onChange={(e) => setReplyDrafts((d) => ({ ...d, [op.id]: e.target.value }))}
+                        onChange={(e) =>
+                          setReplyDrafts((d) => ({
+                            ...d,
+                            [op.id]: e.target.value,
+                          }))
+                        }
                         placeholder="Escribir respuesta..."
                         className="vv-input"
                         rows={2}
@@ -1837,7 +2112,9 @@ export default function MiCuentaPage() {
                           onClick={() => handleReplyOpinion(op.id)}
                           data-testid={`button-reply-${op.id}`}
                         >
-                          {replyingSaving === op.id ? "Guardando..." : "Guardar respuesta"}
+                          {replyingSaving === op.id
+                            ? "Guardando..."
+                            : "Guardar respuesta"}
                         </button>
                         <button
                           type="button"
@@ -1898,70 +2175,229 @@ export default function MiCuentaPage() {
       </div>
 
       {showPagoModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <div style={{ background: '#141414', border: '1px solid #c6a75e44', borderRadius: 16, maxWidth: 400, width: '100%', padding: 24, position: 'relative' }}>
-            <button 
-              style={{ position: 'absolute', top: 12, right: 12, background: 'none', border: 'none', color: '#888', fontSize: 20, cursor: 'pointer' }}
-              onClick={() => setShowPagoModal(false)}
-            >✕</button>
-            <h2 style={{ fontSize: 18, color: '#f2f2f2', marginBottom: 4 }}>Pagar publicación</h2>
-            <p style={{ fontSize: 13, color: '#888', marginBottom: 20 }}>Elegi la duracion de tu publicacion</p>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
-              {[30, 60, 90].map(d => (
-                <button 
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.85)",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 20,
+          }}
+        >
+          <div
+            style={{
+              background: "#141414",
+              border: "1px solid #c6a75e44",
+              borderRadius: 16,
+              maxWidth: 400,
+              width: "100%",
+              padding: 24,
+              paddingBottom: 80,
+              maxHeight: "90vh",
+              overflowY: "auto",
+              position: "relative",
+            }}
+          >
+            <button
+              style={{
+                position: "absolute",
+                top: 12,
+                right: 12,
+                background: "none",
+                border: "none",
+                color: "#888",
+                fontSize: 20,
+                cursor: "pointer",
+              }}
+              onClick={() => {
+                setShowPagoModal(false);
+                setManualPagoId(null);
+                setManualMetodo(null);
+                setManualComprobanteOk(false);
+                setManualMsg(null);
+              }}
+            >
+              ✕
+            </button>
+            <h2 style={{ fontSize: 18, color: "#f2f2f2", marginBottom: 4 }}>
+              Pagar publicación
+            </h2>
+            <p style={{ fontSize: 13, color: "#888", marginBottom: 20 }}>
+              Elegi la duracion de tu publicacion
+            </p>
+
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 10,
+                marginBottom: 24,
+              }}
+            >
+              {[30, 60, 90].map((d) => (
+                <button
                   key={d}
                   onClick={() => setPagoDuracion(d)}
-                  style={{ 
-                    padding: '12px 16px', borderRadius: 10, border: '1px solid', 
-                    borderColor: pagoDuracion === d ? '#c6a75e' : 'rgba(255,255,255,0.08)',
-                    background: pagoDuracion === d ? 'rgba(198,167,94,0.1)' : 'rgba(255,255,255,0.03)',
-                    color: pagoDuracion === d ? '#c6a75e' : '#f2f2f2',
-                    textAlign: 'left', cursor: 'pointer', transition: '0.2s'
+                  style={{
+                    padding: "12px 16px",
+                    borderRadius: 10,
+                    border: "1px solid",
+                    borderColor:
+                      pagoDuracion === d ? "#c6a75e" : "rgba(255,255,255,0.08)",
+                    background:
+                      pagoDuracion === d
+                        ? "rgba(198,167,94,0.1)"
+                        : "rgba(255,255,255,0.03)",
+                    color: pagoDuracion === d ? "#c6a75e" : "#f2f2f2",
+                    textAlign: "left",
+                    cursor: "pointer",
+                    transition: "0.2s",
                   }}
                 >
-                  <div style={{ fontWeight: 'bold' }}>{d} días</div>
-                  <div style={{ fontSize: 12, opacity: 0.8 }}>${d === 30 ? '250' : d === 60 ? '500' : '750'} UYU</div>
+                  <div style={{ fontWeight: "bold" }}>{d} días</div>
+                  <div style={{ fontSize: 12, opacity: 0.8 }}>
+                    ${d === 30 ? "250" : d === 60 ? "500" : "750"} UYU
+                  </div>
                 </button>
               ))}
             </div>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <button 
-                className="vv-btn" 
-                style={{ width: '100%', background: '#0084ff', border: 'none' }}
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <button
+                className="vv-btn"
+                style={{ width: "100%", background: "#0084ff", border: "none" }}
                 disabled={processingPago}
-                onClick={() => handlePagarPublicacion('mercadopago')}
+                onClick={() => handlePagarPublicacion("mercadopago")}
               >
-                {processingPago ? 'Procesando...' : 'Pagar con MercadoPago'}
+                {processingPago ? "Procesando..." : "Pagar con MercadoPago"}
               </button>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                <button 
-                  className="vv-btn" 
-                  style={{ width: '100%', fontSize: '12px' }}
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: 10,
+                }}
+              >
+                <button
+                  className="vv-btn"
+                  style={{ width: "100%", fontSize: "12px" }}
                   disabled={processingPago}
-                  onClick={() => handlePagarPublicacion('abitab')}
+                  onClick={() => handlePagarPublicacion("abitab")}
                 >
                   Abitab
                 </button>
-                <button 
-                  className="vv-btn" 
-                  style={{ width: '100%', fontSize: '12px' }}
+                <button
+                  className="vv-btn"
+                  style={{ width: "100%", fontSize: "12px" }}
                   disabled={processingPago}
-                  onClick={() => handlePagarPublicacion('redpagos')}
+                  onClick={() => handlePagarPublicacion("redpagos")}
                 >
                   RedPagos
                 </button>
               </div>
-              <button 
-                className="vv-btn" 
-                style={{ width: '100%' }}
+              <button
+                className="vv-btn"
+                style={{ width: "100%" }}
                 disabled={processingPago}
-                onClick={() => handlePagarPublicacion('transferencia')}
+                onClick={() => handlePagarPublicacion("transferencia")}
               >
-                {processingPago ? 'Procesando...' : 'Transferencia bancaria'}
+                {processingPago ? "Procesando..." : "Transferencia bancaria"}
               </button>
             </div>
+            {manualPagoId && manualMetodo && (
+              <div
+                style={{
+                  marginTop: 14,
+                  paddingTop: 14,
+                  borderTop: "1px solid rgba(255,255,255,0.08)",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 13,
+                    color: "#c6a75e",
+                    fontWeight: 700,
+                    marginBottom: 6,
+                  }}
+                >
+                  Pago manual generado
+                </div>
+
+                <div
+                  style={{
+                    fontSize: 12,
+                    color: "#bbb",
+                    lineHeight: 1.35,
+                    marginBottom: 10,
+                  }}
+                >
+                  {manualInstrucciones(manualMetodo).map((t) => (
+                    <div key={t}>• {t}</div>
+                  ))}
+                </div>
+
+                <div style={{ fontSize: 12, color: "#888", marginBottom: 10 }}>
+                  Monto:{" "}
+                  <span style={{ color: "#f2f2f2" }}>
+                    $
+                    {pagoDuracion === 30
+                      ? "250"
+                      : pagoDuracion === 60
+                        ? "500"
+                        : "750"}{" "}
+                    UYU
+                  </span>
+                  {" · "}Duración:{" "}
+                  <span style={{ color: "#f2f2f2" }}>{pagoDuracion} días</span>
+                </div>
+
+                {manualComprobanteOk ? (
+                  <div style={{ fontSize: 12, color: "#8be28b" }}>
+                    Comprobante enviado. Queda en revisión.
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 10,
+                    }}
+                  >
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*,.pdf"
+                      style={{ color: "#bbb" }}
+                    />
+                    <button
+                      className="vv-btn"
+                      style={{ width: "100%" }}
+                      disabled={manualUploadLoading}
+                      onClick={() => subirComprobanteManual(manualPagoId)}
+                    >
+                      {manualUploadLoading
+                        ? "Subiendo..."
+                        : "Subir comprobante"}
+                    </button>
+                  </div>
+                )}
+
+                {manualMsg && (
+                  <div
+                    style={{
+                      marginTop: 8,
+                      fontSize: 12,
+                      color: manualComprobanteOk ? "#8be28b" : "#ffb3b3",
+                    }}
+                  >
+                    {manualMsg}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}

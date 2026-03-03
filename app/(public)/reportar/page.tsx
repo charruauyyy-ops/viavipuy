@@ -1,6 +1,7 @@
 export const metadata = {
   title: "Reportar perfil - VIAVIP",
-  description: "Reportá un perfil sospechoso o contenido inapropiado en VIAVIP.",
+  description:
+    "Reportá un perfil sospechoso o contenido inapropiado en VIAVIP.",
 };
 
 import styles from "./ReportarPage.module.css";
@@ -26,15 +27,24 @@ export default function ReportarPage() {
       <header className={styles.hero}>
         <h1 className={styles.title}>Reportar perfil VIAVIP</h1>
         <p className={styles.lead}>
-          Si encontrás un perfil sospechoso, falso o con contenido inapropiado, podés reportarlo desde aquí.
-          Revisamos cada reporte para mantener la plataforma segura, confiable y con perfiles reales.
+          Si encontrás un perfil sospechoso, falso o con contenido inapropiado,
+          podés reportarlo desde aquí. Revisamos cada reporte para mantener la
+          plataforma segura, confiable y con perfiles reales.
         </p>
 
         <div className={styles.heroCtas}>
-          <a className={styles.ctaPrimary} href="/publicar" aria-label="Publicar mi perfil">
+          <a
+            className={styles.ctaPrimary}
+            href="/publicar"
+            aria-label="Publicar mi perfil"
+          >
             Publicar perfil
           </a>
-          <a className={styles.ctaSecondary} href="#form" aria-label="Ir al formulario de reporte">
+          <a
+            className={styles.ctaSecondary}
+            href="#form"
+            aria-label="Ir al formulario de reporte"
+          >
             Reportar ahora
           </a>
         </div>
@@ -47,23 +57,37 @@ export default function ReportarPage() {
       </header>
 
       <section className={styles.grid}>
-        <section className={styles.card} id="form" aria-label="Formulario de reporte">
+        <section
+          className={styles.card}
+          id="form"
+          aria-label="Formulario de reporte"
+        >
           <h2 className={styles.h2}>Formulario</h2>
           <p className={styles.muted}>
-            Tu reporte es privado. Evitá compartir datos personales sensibles (documentos, direcciones, etc.).
+            Tu reporte es privado. Evitá compartir datos personales sensibles
+            (documentos, direcciones, etc.).
           </p>
 
           <form className={styles.form} method="post" action="/api/reportes">
             <label className={styles.label}>
               Motivo
-              <select name="motivo" className={styles.input} required defaultValue="">
+              <select
+                name="motivo"
+                className={styles.input}
+                required
+                defaultValue=""
+              >
                 <option value="" disabled>
                   Seleccioná un motivo
                 </option>
-                <option value="perfil_falso">Perfil falso o suplantación</option>
+                <option value="perfil_falso">
+                  Perfil falso o suplantación
+                </option>
                 <option value="estafa_extorsion">Estafa o extorsión</option>
                 <option value="menor_edad">Menor de edad (URGENTE)</option>
-                <option value="ilegal_inapropiado">Contenido ilegal o inapropiado</option>
+                <option value="ilegal_inapropiado">
+                  Contenido ilegal o inapropiado
+                </option>
                 <option value="spam_publicidad">Spam o publicidad</option>
                 <option value="otro">Otro</option>
               </select>
@@ -104,7 +128,10 @@ export default function ReportarPage() {
 
             <label className={styles.checkboxRow}>
               <input name="confirmo" type="checkbox" required />
-              <span>Confirmo que mi reporte es real y entiendo que el uso abusivo puede ser bloqueado.</span>
+              <span>
+                Confirmo que mi reporte es real y entiendo que el uso abusivo
+                puede ser bloqueado.
+              </span>
             </label>
 
             <button className={styles.submit} type="submit">
@@ -112,12 +139,13 @@ export default function ReportarPage() {
             </button>
 
             <p className={styles.note}>
-              Si es una situación crítica (menor de edad, riesgo o extorsión), usá el canal urgente.
+              Si es una situación crítica (menor de edad, riesgo o extorsión),
+              usá el canal urgente.
             </p>
 
             <a
               className={styles.urgent}
-              href="https://wa.me/0000000000?text=VIAVIP%20URGENTE%20-%20Necesito%20reportar%20un%20caso%20cr%C3%ADtico.%20Link%20del%20perfil%3A%20"
+              href="https://wa.me/59893479706?text=VIAVIP%20URGENTE%20-%20Necesito%20reportar%20un%20caso%20cr%C3%ADtico.%20Link%20del%20perfil%3A%20"
               target="_blank"
               rel="noreferrer"
             >
@@ -131,7 +159,9 @@ export default function ReportarPage() {
           <ol className={styles.steps}>
             <li>Enviás el reporte con el motivo y el link del perfil.</li>
             <li>El equipo revisa el caso manualmente.</li>
-            <li>Si corresponde, se toma acción (revisión, bloqueo o suspensión).</li>
+            <li>
+              Si corresponde, se toma acción (revisión, bloqueo o suspensión).
+            </li>
           </ol>
 
           <div className={styles.divider} />

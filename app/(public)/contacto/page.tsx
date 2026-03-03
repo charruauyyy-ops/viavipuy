@@ -6,7 +6,7 @@ export const metadata = {
 import styles from "./Contacto.module.css";
 
 const WHATSAPP_URL =
-  process.env.NEXT_PUBLIC_WHATSAPP_URL || "https://wa.me/59895586378";
+  process.env.NEXT_PUBLIC_WHATSAPP_URL || "https://wa.me/59893479706";
 
 export default function ContactoPage() {
   return (

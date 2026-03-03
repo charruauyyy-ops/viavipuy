@@ -1,8 +1,8 @@
 export default function ReportarContenidoPage() {
   const email = "admin@viavip.com";
-  const whatsappNumber = "598XXXXXXXX";
+  const whatsappNumber = "+59893479706";
   const whatsappMsg = encodeURIComponent(
-    "Hola VIAVIP, quiero reportar contenido. Detalles: (pegar link del perfil/publicación) ..."
+    "Hola VIAVIP, quiero reportar contenido. Detalles: (pegar link del perfil/publicación) ...",
   );
   const whatsappLink = `https://wa.me/${whatsappNumber}?text=${whatsappMsg}`;
 
