@@ -124,14 +124,16 @@ export default function MiCuentaPage() {
   const [pagoDuracion, setPagoDuracion] = useState<number>(30);
   const [processingPago, setProcessingPago] = useState(false);
 
-  async function handlePagarPublicacion(metodo: "mercadopago" | "manual") {
+  async function handlePagarPublicacion(metodo: "mercadopago" | "abitab" | "redpagos" | "transferencia") {
     if (!pub || !userId) return;
     setProcessingPago(true);
+
     try {
+      const pubMonto = pagoDuracion === 30 ? 250 : pagoDuracion === 60 ? 500 : 750;
       const supabase = getSupabase();
       const { data: session } = await supabase!.auth.getSession();
       const token = session?.session?.access_token;
-      
+
       if (metodo === "mercadopago") {
         const res = await fetch("/api/pagos/mercadopago", {
           method: "POST",
@@ -143,6 +145,7 @@ export default function MiCuentaPage() {
             tipo: "publicacion",
             publicacion_id: pub.id,
             publicacion_duracion_dias: pagoDuracion,
+            publicacion_monto: pubMonto,
           }),
         });
         const data = await res.json();
@@ -152,7 +155,6 @@ export default function MiCuentaPage() {
         }
         alert(data.error || "Error al iniciar pago");
       } else {
-        const monto = pagoDuracion === 30 ? 250 : pagoDuracion === 60 ? 500 : 750;
         const res = await fetch("/api/pagos/crear", {
           method: "POST",
           headers: {
@@ -161,10 +163,10 @@ export default function MiCuentaPage() {
           },
           body: JSON.stringify({
             tipo: "publicacion",
+            metodo_pago: metodo,
             publicacion_id: pub.id,
             publicacion_duracion_dias: pagoDuracion,
-            publicacion_monto: monto,
-            metodo_pago: "abitab",
+            publicacion_monto: pubMonto,
           }),
         });
         const data = await res.json();
@@ -1933,13 +1935,31 @@ export default function MiCuentaPage() {
               >
                 {processingPago ? 'Procesando...' : 'Pagar con MercadoPago'}
               </button>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <button 
+                  className="vv-btn" 
+                  style={{ width: '100%', fontSize: '12px' }}
+                  disabled={processingPago}
+                  onClick={() => handlePagarPublicacion('abitab')}
+                >
+                  Abitab
+                </button>
+                <button 
+                  className="vv-btn" 
+                  style={{ width: '100%', fontSize: '12px' }}
+                  disabled={processingPago}
+                  onClick={() => handlePagarPublicacion('redpagos')}
+                >
+                  RedPagos
+                </button>
+              </div>
               <button 
                 className="vv-btn" 
                 style={{ width: '100%' }}
                 disabled={processingPago}
-                onClick={() => handlePagarPublicacion('manual')}
+                onClick={() => handlePagarPublicacion('transferencia')}
               >
-                {processingPago ? 'Procesando...' : 'Otros medios (Abitab/RedPagos)'}
+                {processingPago ? 'Procesando...' : 'Transferencia bancaria'}
               </button>
             </div>
           </div>

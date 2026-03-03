@@ -1,3 +1,4 @@
+// app/api/pagos/webhook/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { MercadoPagoConfig, Payment } from "mercadopago";
@@ -39,52 +40,83 @@ function verifyWebhookSignature(req: NextRequest, body: string): boolean {
   return computed === hash;
 }
 
-async function activarPlan(sc: any, pagoId: string, mpPaymentId?: string) {
-  if (!sc) return;
-  const { data: updated, error } = await sc.from("pagos_viavip").update({ estado_pago: "acreditado", acreditado_at: new Date().toISOString(), ...(mpPaymentId ? { mp_payment_id: String(mpPaymentId) } : {}) }).eq("id", pagoId).eq("estado_pago", "pendiente").select("user_id, plan_id, duracion_dias").single();
-  if (error || !updated) return;
+async function activarPlan(sc: any, pago: any) {
   const now = new Date();
-  const expiresAt = addDays(now, updated.duracion_dias);
-  const planWeight = PLAN_WEIGHT[updated.plan_id] ?? 0;
-  await sc.from("profiles").update({ plan_actual: updated.plan_id, plan_estado: "activo", plan_expires_at: expiresAt.toISOString(), updated_at: now.toISOString() }).eq("id", updated.user_id);
-  await sc.from("publicaciones").update({ plan_weight: planWeight, plan_actual: updated.plan_id, updated_at: now.toISOString() }).eq("user_id", updated.user_id);
+  const duracion = Number(pago.plan_duracion_dias);
+  const expiresAt = addDays(now, duracion);
+  const planNombre = String(pago.plan_nombre || "").toLowerCase();
+  const planWeight = PLAN_WEIGHT[planNombre] ?? 0;
+
+  await sc.from("profiles").update({ 
+    plan_actual: pago.plan_nombre, 
+    plan_estado: "activo", 
+    plan_expires_at: expiresAt.toISOString(), 
+    updated_at: now.toISOString() 
+  }).eq("id", pago.user_id);
+
+  await sc.from("publicaciones").update({ 
+    plan_weight: planWeight, 
+    plan_actual: pago.plan_nombre, 
+    updated_at: now.toISOString() 
+  }).eq("user_id", pago.user_id);
 }
 
-async function activarPublicacion(sc: any, pagoId: string, mpPaymentId?: string) {
-  if (!sc) return;
-  const { data: pago, error: fetchErr } = await sc.from("pagos_viavip").select("id, tipo, user_id, publicacion_id, publicacion_duracion_dias, estado_pago").eq("id", pagoId).single();
-  if (fetchErr || !pago) return;
-  if (pago.tipo !== "publicacion" || !pago.publicacion_id) return;
-  if (pago.estado_pago === "acreditado") return;
+async function activarPublicacion(sc: any, pago: any) {
   const duracion = Number(pago.publicacion_duracion_dias);
-  if (![30, 60, 90].includes(duracion)) return;
-  await sc.from("pagos_viavip").update({ estado_pago: "acreditado", estado: "aprobado", validado_at: new Date().toISOString(), ...(mpPaymentId ? { mp_payment_id: String(mpPaymentId) } : {}) }).eq("id", pagoId);
-  const expiresAt = new Date();
-  expiresAt.setDate(expiresAt.getDate() + duracion);
-  await sc.from("publicaciones").update({ expires_at: expiresAt.toISOString(), grace_until: null, estado_publicacion: "activo", updated_at: new Date().toISOString() }).eq("id", pago.publicacion_id);
+  const { data: pub } = await sc.from("publicaciones").select("expires_at").eq("id", pago.publicacion_id).single();
+  
+  const currentExpires = pub?.expires_at ? new Date(pub.expires_at) : new Date();
+  const baseDate = currentExpires > new Date() ? currentExpires : new Date();
+  const newExpires = addDays(baseDate, duracion);
+
+  await sc.from("publicaciones").update({ 
+    expires_at: newExpires.toISOString(), 
+    grace_until: null, 
+    estado_publicacion: "activo", 
+    updated_at: new Date().toISOString() 
+  }).eq("id", pago.publicacion_id);
 }
 
 export async function POST(req: NextRequest) {
   try {
     const mpToken = process.env.MP_ACCESS_TOKEN;
     if (!mpToken) return NextResponse.json({ error: "MP no configurado" }, { status: 500 });
+    
     const rawBody = await req.text();
     let body: any;
     try { body = JSON.parse(rawBody); } catch { return NextResponse.json({ ok: true }); }
+    
     if (!verifyWebhookSignature(req, rawBody)) return NextResponse.json({ error: "Firma invalida" }, { status: 401 });
     if (body.type !== "payment" || !body.data?.id) return NextResponse.json({ ok: true });
+
     const client = new MercadoPagoConfig({ accessToken: mpToken });
     const paymentApi = new Payment(client);
     const payment = await paymentApi.get({ id: body.data.id });
+    
     if (!payment || payment.status !== "approved") return NextResponse.json({ ok: true });
+
     const pagoId = payment.external_reference;
     if (!pagoId) return NextResponse.json({ ok: true });
+
     const sc = getServiceClient();
     if (!sc) return NextResponse.json({ ok: true });
-    const { data: pagoBase } = await sc.from("pagos_viavip").select("tipo").eq("id", pagoId).single();
-    if (!pagoBase) return NextResponse.json({ ok: true });
-    if (pagoBase.tipo === "plan") await activarPlan(sc, pagoId, String(body.data.id));
-    else if (pagoBase.tipo === "publicacion") await activarPublicacion(sc, pagoId, String(body.data.id));
+
+    const { data: pago } = await sc.from("pagos_viavip").select("*").eq("id", pagoId).single();
+    if (!pago || pago.estado_pago === "acreditado") return NextResponse.json({ ok: true });
+
+    await sc.from("pagos_viavip").update({ 
+      estado_pago: "acreditado", 
+      estado: "aprobado", 
+      validado_at: new Date().toISOString(),
+      mp_payment_id: String(body.data.id)
+    }).eq("id", pagoId);
+
+    if (pago.tipo === "plan") {
+      await activarPlan(sc, pago);
+    } else if (pago.tipo === "publicacion") {
+      await activarPublicacion(sc, pago);
+    }
+
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("Webhook error:", err);
