@@ -144,16 +144,22 @@ export default function MiCuentaPage() {
   function manualInstrucciones(m: "abitab" | "redpagos" | "transferencia") {
     if (m === "abitab")
       return [
-        "Pagá en Abitab con el monto indicado.",
+        "Acercate a cualquier local Abitab.",
+        "Indica que queres hacer un pago a Jonathan David Semelman Fontaine.",
+        "Cédula: 37884659.",
         "Guardá el comprobante y subilo acá.",
       ];
     if (m === "redpagos")
       return [
-        "Pagá en RedPagos con el monto indicado.",
+        "Acercate a cualquier local RedPagos.",
+        "Indica que queres hacer un pago a Jonathan David Semelman Fontaine.",
+        "Cédula: 37884659.",
         "Guardá el comprobante y subilo acá.",
       ];
     return [
-      "Realizá la transferencia con el monto indicado.",
+      "Realiza una transferencia Por Prex:",
+        "Cuenta: 21657689",
+        "Nombre: Jonathan Semelman",
       "Guardá el comprobante y subilo acá.",
     ];
   }
