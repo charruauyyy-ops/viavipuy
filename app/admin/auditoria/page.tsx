@@ -42,31 +42,40 @@ export default function AdminAuditoriaPage() {
         const treintaDias = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
         // Helper for counts
-        const getCount = async (table: string, filter?: any) => {
-          let query = supabase.from(table).select("*", { count: "exact", head: true });
-          if (filter) {
-            Object.entries(filter).forEach(([key, val]: [string, any]) => {
-              if (key === "gte") query = query.gte("created_at", val);
-              else if (key === "eq") query = query.eq(val[0], val[1]);
-              else if (key === "lt") query = query.lt("expires_at", val);
-            });
-          }
-          const { count, error } = await query;
-          return count || 0;
-        };
+const getCount = async (
+  table: string,
+  filter?: { gte?: string; lt?: string; eq?: [string, any]; tipo?: string }
+) => {
+  let query: any = supabase.from(table).select("*", { count: "exact", head: true });
+
+  // Filtros simples y explícitos para evitar inferencias de tipos gigantes (bug TS: "excessively deep")
+  if (filter?.gte) query = query.gte("created_at", filter.gte);
+  if (filter?.lt) query = query.lt("expires_at", filter.lt);
+  if (filter?.eq) query = query.eq(filter.eq[0], filter.eq[1]);
+  if (filter?.tipo) query = query.eq("tipo", filter.tipo);
+
+  const { count, error } = await query;
+  if (error) throw error;
+  return count || 0;
+};
 
         // Helper for sum
-        const getSum = async (table: string, filter?: any) => {
-          let query = supabase.from(table).select("monto");
-          if (filter) {
-            Object.entries(filter).forEach(([key, val]: [string, any]) => {
-              if (key === "gte") query = query.gte("created_at", val);
-              else if (key === "eq") query = query.eq(val[0], val[1]);
-            });
-          }
-          const { data, error } = await query;
-          return data?.reduce((acc, curr) => acc + (curr.monto || 0), 0) || 0;
-        };
+const getSum = async (
+  table: string,
+  column: string,
+  filter?: { gte?: string; lt?: string; eq?: [string, any]; tipo?: string }
+) => {
+  let query: any = supabase.from(table).select(`sum:${column}.sum()`, { head: false });
+
+  if (filter?.gte) query = query.gte("created_at", filter.gte);
+  if (filter?.lt) query = query.lt("expires_at", filter.lt);
+  if (filter?.eq) query = query.eq(filter.eq[0], filter.eq[1]);
+  if (filter?.tipo) query = query.eq("tipo", filter.tipo);
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return data?.[0]?.sum || 0;
+};
 
         // Helper for unique IPs (distinct is hard in Supabase client, we fetch and set)
         const getUniqueIps = async (gte: string) => {
