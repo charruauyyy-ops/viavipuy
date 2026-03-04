@@ -67,8 +67,19 @@ export async function POST(req: NextRequest) {
   }
 
   const { adminId, serviceClient: sc } = admin;
-  const body = await req.json();
-  const { pago_id, accion } = body;
+
+  let pago_id;
+  let accion;
+
+  try {
+    const body = await req.json();
+    pago_id = body.pago_id;
+    accion = body.accion;
+  } catch {
+    const form = await req.formData();
+    pago_id = form.get("pago_id");
+    accion = form.get("accion");
+  }
 
   if (!pago_id || !["acreditar", "rechazar"].includes(accion)) {
     return NextResponse.json({ error: "Datos invalidos" }, { status: 400 });
@@ -85,13 +96,21 @@ export async function POST(req: NextRequest) {
   }
 
   if (pago.estado_pago !== "pendiente") {
-    return NextResponse.json({ error: "Este pago ya fue procesado" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Este pago ya fue procesado" },
+      { status: 400 },
+    );
   }
 
-  const isManual = ["abitab", "redpagos", "transferencia"].includes(pago.metodo_pago);
+  const isManual = ["abitab", "redpagos", "transferencia"].includes(
+    pago.metodo_pago,
+  );
 
   if (accion === "acreditar" && isManual && !pago.comprobante_url) {
-    return NextResponse.json({ error: "No se puede aprobar un pago manual sin comprobante" }, { status: 400 });
+    return NextResponse.json(
+      { error: "No se puede aprobar un pago manual sin comprobante" },
+      { status: 400 },
+    );
   }
 
   if (accion === "rechazar") {
@@ -99,13 +118,13 @@ export async function POST(req: NextRequest) {
       .from("pagos_viavip")
       .update({
         estado_pago: "rechazado",
-        acreditado_at: new Date().toISOString(),
+        validado_at: new Date().toISOString(),
       })
       .eq("id", pago_id)
       .eq("estado_pago", "pendiente");
 
     if (updErr) {
-      return NextResponse.json({ error: "Error al rechazar" }, { status: 500 });
+      return NextResponse.json({ error: updErr.message }, { status: 500 });
     }
 
     await logAudit(sc, adminId, "pago_rechazado", "pagos_viavip", pago_id, {
@@ -120,7 +139,7 @@ export async function POST(req: NextRequest) {
     .from("pagos_viavip")
     .update({
       estado_pago: "acreditado",
-      acreditado_at: new Date().toISOString(),
+      validado_at: new Date().toISOString(),
     })
     .eq("id", pago_id)
     .eq("estado_pago", "pendiente")
@@ -128,12 +147,14 @@ export async function POST(req: NextRequest) {
     .single();
 
   if (updErr || !updated) {
-    return NextResponse.json({ error: "Error al acreditar o pago ya procesado" }, { status: 500 });
+    return NextResponse.json(
+      { error: updErr?.message || "Error al acreditar o pago ya procesado" },
+      { status: 500 },
+    );
   }
 
   const planWeight = PLAN_WEIGHT[updated.plan_id] ?? 0;
 
-  // Actualizar el plan usando la función RPC para manejar correctamente la acumulación de días
   await sc.rpc("admin_apply_plan", {
     p_user_id: updated.user_id,
     p_plan_id: updated.plan_id,

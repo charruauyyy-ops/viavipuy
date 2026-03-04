@@ -8,7 +8,10 @@ export function getRouteSupabase(req: NextRequest, res: NextResponse) {
   return createServerClient(url, anonKey, {
     cookies: {
       getAll() {
-        return req.cookies.getAll();
+        return req.cookies.getAll().map((c) => ({
+          name: c.name,
+          value: c.value,
+        }));
       },
       setAll(cookiesToSet) {
         cookiesToSet.forEach(({ name, value, options }) => {

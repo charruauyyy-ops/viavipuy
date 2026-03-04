@@ -6,7 +6,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { getRouteSupabase } from "@/lib/supabaseRoute";
 import { getServerSupabase } from "@/lib/supabaseServer";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnySupabase = SupabaseClient<any, any, any>;
 
 function getServiceClient(): AnySupabase | null {
@@ -17,20 +16,15 @@ function getServiceClient(): AnySupabase | null {
 }
 
 async function isAdminByRol(serviceClient: AnySupabase, userId: string) {
-  const { data: profile } = await serviceClient
-    .from("profiles")
-    .select("rol")
-    .eq("id", userId)
+  const { data } = await serviceClient
+    .from("admins")
+    .select("user_id")
+    .eq("user_id", userId)
     .maybeSingle();
 
-  return profile?.rol === "admin";
+  return !!data;
 }
 
-/**
- * getAuthenticatedAdmin:
- * - Route Handlers: pasar (req, res) para que supabase lea cookies del request.
- * - Server Actions: llamar sin args, usa supabase server (cookies via next/headers).
- */
 export async function getAuthenticatedAdmin(
   req?: NextRequest,
   res?: NextResponse,
@@ -38,7 +32,6 @@ export async function getAuthenticatedAdmin(
   const serviceClient = getServiceClient();
   if (!serviceClient) return null;
 
-  // Caso ROUTE HANDLER
   if (req && res) {
     const supabase = getRouteSupabase(req, res);
     const {
@@ -54,7 +47,6 @@ export async function getAuthenticatedAdmin(
     return { adminId: user.id, serviceClient };
   }
 
-  // Caso SERVER ACTION
   const serverSupabase = await getServerSupabase();
   if (!serverSupabase) return null;
 
@@ -71,7 +63,6 @@ export async function getAuthenticatedAdmin(
   return { adminId: user.id, serviceClient };
 }
 
-// Alias para que tu código viejo siga andando si lo usa en actions
 export async function getAuthenticatedAdminAction(): Promise<{
   adminId: string;
   serviceClient: AnySupabase;
@@ -89,13 +80,13 @@ export async function logAudit(
 ) {
   try {
     await supabase.from("admin_audit").insert({
-      admin_id: adminId,
-      action,
+      admin_user_id: adminId,
+      accion: action,
       target_table: targetTable,
       target_id: targetId,
-      details: details || {},
+      payload_json: details ?? {},
     });
-  } catch {
-    // no bloquear operación principal
+  } catch (e) {
+    console.error("AUDIT ERROR:", e);
   }
 }
