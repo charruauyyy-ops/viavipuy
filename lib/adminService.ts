@@ -42,8 +42,10 @@ export async function getAuthenticatedAdmin(
   if (req && res) {
     const supabase = getRouteSupabase(req, res);
     const {
-      data: { user },
-    } = await supabase.auth.getUser();
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    const user = session?.user ?? null;
 
     if (!user) return null;
     const ok = await isAdminByRol(serviceClient, user.id);
@@ -57,8 +59,10 @@ export async function getAuthenticatedAdmin(
   if (!serverSupabase) return null;
 
   const {
-    data: { user },
-  } = await serverSupabase.auth.getUser();
+    data: { session },
+  } = await serverSupabase.auth.getSession();
+
+  const user = session?.user ?? null;
 
   if (!user) return null;
   const ok = await isAdminByRol(serviceClient, user.id);
