@@ -59,9 +59,27 @@ export default function AdminPreciosPage() {
     checkAdmin();
   }, [router]);
 
+  async function authFetch(url: string, options: RequestInit = {}) {
+    const supabase = getSupabase();
+    if (!supabase) throw new Error("Supabase no configurado");
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) {
+      setAuthError("No hay sesión");
+      throw new Error("No hay sesión");
+    }
+    return fetch(url, {
+      ...options,
+      headers: {
+        ...options.headers,
+        "Authorization": `Bearer ${session.access_token}`,
+        "Content-Type": "application/json",
+      },
+    });
+  }
+
   async function fetchData() {
     try {
-      const res = await fetch("/api/admin/precios");
+      const res = await authFetch("/api/admin/precios");
       const data = await res.json();
       if (data.publicaciones) setPublicacionPrecios(data.publicaciones);
       if (data.planes) setPlanesCatalogo(data.planes);
@@ -73,9 +91,8 @@ export default function AdminPreciosPage() {
   async function savePublicacionPrecio(id: string, nuevoPrecio: number) {
     setSaving(`pub-${id}`);
     try {
-      const res = await fetch("/api/admin/precios", {
+      const res = await authFetch("/api/admin/precios", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ tipo: "publicacion", id, precio_uyu: nuevoPrecio }),
       });
       if (!res.ok) throw new Error("Error al guardar");
@@ -90,9 +107,8 @@ export default function AdminPreciosPage() {
   async function savePlanPrecio(id: string, nuevoPrecio: number, nuevoActivo: boolean) {
     setSaving(`plan-${id}`);
     try {
-      const res = await fetch("/api/admin/precios", {
+      const res = await authFetch("/api/admin/precios", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ tipo: "plan", id, precio_uyu: nuevoPrecio, activo: nuevoActivo }),
       });
       if (!res.ok) throw new Error("Error al guardar");
