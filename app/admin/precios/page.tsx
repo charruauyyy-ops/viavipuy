@@ -63,15 +63,12 @@ export default function AdminPreciosPage() {
     const supabase = getSupabase();
     if (!supabase) throw new Error("Supabase no configurado");
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.access_token) {
-      setAuthError("No hay sesión");
-      throw new Error("No hay sesión");
-    }
+    
     return fetch(url, {
       ...options,
       headers: {
         ...options.headers,
-        "Authorization": `Bearer ${session.access_token}`,
+        ...(session?.access_token ? { "Authorization": `Bearer ${session.access_token}` } : {}),
         "Content-Type": "application/json",
       },
     });
@@ -80,6 +77,11 @@ export default function AdminPreciosPage() {
   async function fetchData() {
     try {
       const res = await authFetch("/api/admin/precios");
+      if (res.status === 401) {
+        setAuthError("No autorizado");
+        setLoading(false);
+        return;
+      }
       const data = await res.json();
       if (data.publicaciones) setPublicacionPrecios(data.publicaciones);
       if (data.planes) setPlanesCatalogo(data.planes);
