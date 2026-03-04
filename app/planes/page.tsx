@@ -75,6 +75,7 @@ export default function PlanesPage() {
 
   const [userId, setUserId] = useState<string | null>(null);
   const [sessionToken, setSessionToken] = useState<string | null>(null);
+  const [catalogo, setCatalogo] = useState<any[]>([]);
 
   const [currentPlan, setCurrentPlan] = useState<string>("free");
   const [planEstado, setPlanEstado] = useState<string>("sin_plan");
@@ -183,6 +184,29 @@ export default function PlanesPage() {
     load();
   }, []);
 
+  async function fetchCatalogo() {
+    try {
+      const res = await fetch("/api/planes/catalogo", { cache: "no-store" });
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        setCatalogo(data);
+      }
+    } catch (err) {
+      console.error("Error fetching catalogo:", err);
+    }
+  }
+
+  useEffect(() => {
+    fetchCatalogo();
+  }, []);
+
+  function getPrecio(plan: string, dias: number) {
+    const item = catalogo.find(
+      (p: any) => p.plan.toLowerCase() === plan.toLowerCase() && p.duracion_dias === dias
+    );
+    return item ? item.precio_uyu : 0;
+  }
+
   function handleActivate(planId: string) {
     setSelectedPlan(planId);
     setSelectedMetodo(null);
@@ -288,7 +312,7 @@ export default function PlanesPage() {
   );
 
   const selectedPlanPrice = selectedPlan
-    ? getPlanPrice(selectedPlan, duration)
+    ? getPrecio(selectedPlan, duration)
     : 0;
 
   function formatPrice(n: number) {
@@ -402,18 +426,29 @@ export default function PlanesPage() {
                 {isCurrent ? (
                   <div className={styles.currentPlan}>Plan actual</div>
                 ) : (
-                  <button
-                    className="vv-btn vv-plan-btn"
-                    disabled={loading || !userId}
-                    onClick={() => handleActivate(planId)}
-                    data-testid={`btn-activar-${planId}`}
-                  >
-                    {!userId
-                      ? "Inicia sesion"
-                      : currentPlan === planId && planEstado === "vencido"
-                        ? "Renovar"
-                        : "Activar plan"}
-                  </button>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
+                    <div style={{ 
+                      fontSize: '24px', 
+                      fontWeight: 'bold', 
+                      color: '#c6a75e', 
+                      textAlign: 'center',
+                      marginBottom: '10px'
+                    }}>
+                      ${formatPrice(getPrecio(planId, duration))} / {duration === 90 ? "3 meses" : `${duration} días`}
+                    </div>
+                    <button
+                      className="vv-btn vv-plan-btn"
+                      disabled={loading || !userId}
+                      onClick={() => handleActivate(planId)}
+                      data-testid={`btn-activar-${planId}`}
+                    >
+                      {!userId
+                        ? "Inicia sesion"
+                        : currentPlan === planId && planEstado === "vencido"
+                          ? "Renovar"
+                          : "Activar plan"}
+                    </button>
+                  </div>
                 )}
               </div>
             );
