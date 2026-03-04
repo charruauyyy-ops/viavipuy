@@ -131,26 +131,21 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Error al acreditar o pago ya procesado" }, { status: 500 });
   }
 
-  const now = new Date();
-  const expiresAt = addDays(now, updated.duracion_dias);
   const planWeight = PLAN_WEIGHT[updated.plan_id] ?? 0;
 
-  await sc
-    .from("profiles")
-    .update({
-      plan_actual: updated.plan_id,
-      plan_estado: "activo",
-      plan_expires_at: expiresAt.toISOString(),
-      updated_at: now.toISOString(),
-    })
-    .eq("id", updated.user_id);
+  // Actualizar el plan usando la función RPC para manejar correctamente la acumulación de días
+  await sc.rpc("admin_apply_plan", {
+    p_user_id: updated.user_id,
+    p_plan_id: updated.plan_id,
+    p_days: updated.duracion_dias,
+  });
 
   await sc
     .from("publicaciones")
     .update({
       plan_weight: planWeight,
       plan_actual: updated.plan_id,
-      updated_at: now.toISOString(),
+      updated_at: new Date().toISOString(),
     })
     .eq("user_id", updated.user_id);
 
