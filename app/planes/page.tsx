@@ -22,8 +22,8 @@ const INSTRUCCIONES: Record<string, { titulo: string; pasos: string[] }> = {
     titulo: "Pago en Abitab",
     pasos: [
       "Acercate a cualquier local Abitab",
-      "Indica que queres hacer un pago a VIAVIP",
-      "Monto indicado abajo",
+      "Indica que queres hacer un pago a Jonathan Semelman",
+      "Cedula 37884659",
       "Guarda el comprobante y subilo aca",
     ],
   },
@@ -31,43 +31,23 @@ const INSTRUCCIONES: Record<string, { titulo: string; pasos: string[] }> = {
     titulo: "Pago en RedPagos",
     pasos: [
       "Acercate a cualquier local RedPagos",
-      "Indica que queres hacer un pago a VIAVIP",
-      "Monto indicado abajo",
+        "Indica que queres hacer un pago a Jonathan Semelman",
+        "Cedula 37884659",
       "Guarda el comprobante y subilo aca",
     ],
   },
   transferencia: {
     titulo: "Transferencia bancaria",
     pasos: [
-      "Realiza una transferencia al siguiente BROU:",
-      "Cuenta: 001580853-00001",
-      "Nombre: VIAVIP SRL",
+      "Realiza una transferencia a la cuenta Prex:",
+      "Cuenta: 21657689",
+      "Nombre: Jonathan Semelman",
       "Concepto: tu email de registro",
       "Subi el comprobante de la transferencia aca",
     ],
   },
 };
 
-const PLAN_IMAGES: Record<
-  "plus" | "platino" | "diamante",
-  Record<DurationKey, string>
-> = {
-  plus: {
-    7: "/planes/plus-7.png",
-    30: "/planes/plus-30.png",
-    90: "/planes/plus-90.png",
-  },
-  platino: {
-    7: "/planes/platino-7.png",
-    30: "/planes/platino-30.png",
-    90: "/planes/platino-90.png",
-  },
-  diamante: {
-    7: "/planes/diamante-7.png",
-    30: "/planes/diamante-30.png",
-    90: "/planes/diamante-90.png",
-  },
-};
 
 export default function PlanesPage() {
   const router = useRouter();
@@ -413,26 +393,89 @@ export default function PlanesPage() {
                 key={planId}
                 className={`${styles.card} ${planId === "diamante" ? styles.featured : ""}`}
               >
-                <img
-                  src={
-                    PLAN_IMAGES[planId as "plus" | "platino" | "diamante"][
-                      duration
-                    ]
-                  }
-                  alt={`Plan ${plan.name}`}
-                  className={styles.planImage}
-                />
+                <div className={styles.planHeader}>
+                  {planId === "diamante" && <div className={styles.bestValue}>Más elegido</div>}
+                  <div className={`${styles.badge} ${styles[`badge_${planId}`]}`}>
+                    {planId.toUpperCase()}
+                  </div>
+                  <h3 className={styles.planTitle}>
+                    {planId === "plus" && "PLUS — Más visibilidad"}
+                    {planId === "platino" && "PLATINO — Exposición superior"}
+                    {planId === "diamante" && "DIAMANTE — Máxima visibilidad"}
+                  </h3>
+                </div>
+
+                <div className={styles.priceList}>
+                  {[7, 30, 90].map((d) => (
+                    <div 
+                      key={d} 
+                      className={`${styles.priceItem} ${duration === d ? styles.priceItemActive : ""}`}
+                    >
+                      <span className={styles.priceDays}>{d === 90 ? "3 meses" : `${d} días`}</span>
+                      <span className={styles.priceValue}>${formatPrice(getPrecio(planId, d))} UYU</span>
+                    </div>
+                  ))}
+                </div>
+
+                <ul className={styles.features}>
+                  {planId === "plus" && (
+                    <>
+                      <li>✔ Hasta 25 fotos en tu perfil</li>
+                      <li>✔ Historias destacadas visibles</li>
+                      <li>✔ Aparece en búsquedas de clientes</li>
+                      <li>✔ Aparece en carrusel de destacadas</li>
+                      <li>✔ Panel de métricas (visitas, clics WhatsApp, tiempo promedio)</li>
+                      <li>✔ Badge PLUS en tu perfil</li>
+                      <li>✔ Prioridad leve en listados</li>
+                    </>
+                  )}
+                  {planId === "platino" && (
+                    <>
+                      <li>✔ Hasta 25 fotos en tu perfil</li>
+                      <li>✔ Historias destacadas visibles</li>
+                      <li>✔ Aparece en búsquedas de clientes</li>
+                      <li>✔ Aparece en carrusel de destacadas</li>
+                      <li>✔ Panel completo de métricas</li>
+                      <li>✔ Badge PLATINO premium</li>
+                      <li>✔ Boost en ranking</li>
+                      <li>✔ Prioridad media en listados</li>
+                    </>
+                  )}
+                  {planId === "diamante" && (
+                    <>
+                      <li>✔ Hasta 25 fotos en tu perfil</li>
+                      <li>✔ Historias destacadas prioritarias</li>
+                      <li>✔ Aparece en búsquedas de clientes</li>
+                      <li>✔ Aparece en carrusel de destacadas</li>
+                      <li>✔ Panel avanzado de métricas</li>
+                      <li>✔ Badge DIAMANTE premium</li>
+                      <li>✔ Máxima prioridad en ranking</li>
+                      <li>✔ Prioridad máxima en listados</li>
+                      <li className={styles.extraFeature}>✔ Datos avanzados desbloqueados</li>
+                      <li className={styles.extraSub}>- tendencias</li>
+                      <li className={styles.extraSub}>- actividad en tiempo real</li>
+                      <li className={styles.extraSub}>- favoritos</li>
+                      <li className={styles.extraSub}>- métricas completas</li>
+                    </>
+                  )}
+                </ul>
+
+                <p className={styles.planFooterText}>
+                  {planId === "plus" && "Más visibilidad = más visitas a tu perfil y más oportunidades de contacto."}
+                  {planId === "platino" && "Mayor exposición en la plataforma = más tráfico y más oportunidades de recibir contactos."}
+                  {planId === "diamante" && "La mayor exposición posible en la plataforma para recibir el máximo de visitas y contactos."}
+                </p>
 
                 {isCurrent ? (
                   <div className={styles.currentPlan}>Plan actual</div>
                 ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%', marginTop: 'auto' }}>
                     <div style={{ 
-                      fontSize: '24px', 
+                      fontSize: '20px', 
                       fontWeight: 'bold', 
                       color: '#c6a75e', 
                       textAlign: 'center',
-                      marginBottom: '10px'
+                      marginBottom: '5px'
                     }}>
                       ${formatPrice(getPrecio(planId, duration))} / {duration === 90 ? "3 meses" : `${duration} días`}
                     </div>

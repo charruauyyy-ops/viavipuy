@@ -128,7 +128,7 @@ export async function POST(req: NextRequest) {
     }
 
     await logAudit(sc, adminId, "pago_rechazado", "pagos_viavip", pago_id, {
-      plan_id: pago.plan_id,
+      plan_nombre: pago.plan_nombre,
       monto: pago.monto,
     });
 
@@ -143,7 +143,7 @@ export async function POST(req: NextRequest) {
     })
     .eq("id", pago_id)
     .eq("estado_pago", "pendiente")
-    .select("user_id, plan_id, duracion_dias")
+    .select("user_id, plan_nombre, plan_duracion_dias")
     .single();
 
   if (updErr || !updated) {
@@ -153,27 +153,28 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const planWeight = PLAN_WEIGHT[updated.plan_id] ?? 0;
+  const planKey = String(updated.plan_nombre).toLowerCase();
+  const planWeight = PLAN_WEIGHT[planKey] ?? 0;
 
   await sc.rpc("admin_apply_plan", {
     p_user_id: updated.user_id,
-    p_plan_id: updated.plan_id,
-    p_days: updated.duracion_dias,
+    p_plan_id: planKey,
+    p_days: updated.plan_duracion_dias,
   });
 
   await sc
     .from("publicaciones")
     .update({
       plan_weight: planWeight,
-      plan_actual: updated.plan_id,
+      plan_actual: planKey,
       updated_at: new Date().toISOString(),
     })
     .eq("user_id", updated.user_id);
 
   await logAudit(sc, adminId, "pago_acreditado", "pagos_viavip", pago_id, {
-    plan_id: updated.plan_id,
+    plan_nombre: updated.plan_nombre,
     monto: pago.monto,
-    duracion_dias: updated.duracion_dias,
+    duracion_dias: updated.plan_duracion_dias,
   });
 
   return NextResponse.json({ ok: true });

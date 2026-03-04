@@ -1,604 +1,206 @@
-.planesPage {
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  padding: 24px 16px 80px;
-  position: relative;
-  overflow-x: hidden;
-}
-
-/* Fondo premium + “polvo” simulado */
-.planesPage::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(1000px 500px at 50% -10%, rgba(198, 167, 94, 0.14), transparent 60%),
-    radial-gradient(900px 450px at 15% 30%, rgba(198, 167, 94, 0.08), transparent 60%),
-    radial-gradient(900px 450px at 85% 30%, rgba(198, 167, 94, 0.08), transparent 60%),
-    radial-gradient(2px 2px at 20% 35%, rgba(255, 255, 255, 0.12), transparent 60%),
-    radial-gradient(2px 2px at 70% 25%, rgba(255, 255, 255, 0.10), transparent 60%),
-    radial-gradient(2px 2px at 55% 60%, rgba(198, 167, 94, 0.10), transparent 60%),
-    radial-gradient(2px 2px at 30% 75%, rgba(198, 167, 94, 0.08), transparent 60%);
-  opacity: 0.9;
-}
-
-.container {
-  width: 100%;
-  max-width: 1040px;
-}
-
-.header {
-  text-align: center;
-  margin-bottom: 24px;
-}
-
-.title {
-  font-family: 'Playfair Display', serif;
-  font-size: 34px;
-  font-weight: 800;
-  letter-spacing: -0.5px;
-  color: #f2f2f2;
-  margin-bottom: 6px;
-  text-shadow: 0 0 22px rgba(198, 167, 94, 0.12);
-}
-
-.subtitle {
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.60);
-  margin-bottom: 0;
-}
-
-.durationTabs {
-  display: inline-flex;
-  gap: 10px;
-  margin-top: 14px;
-  padding: 7px;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.10);
-  background: rgba(255, 255, 255, 0.035);
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
-}
-
-.tab {
-  padding: 9px 16px;
-  border-radius: 999px;
-  font-size: 13px;
-  background: transparent;
-  border: 1px solid transparent;
-  color: rgba(255, 255, 255, 0.72);
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.15s;
-  font-family: inherit;
-  font-weight: 600;
-}
-
-.tab:hover {
-  transform: translateY(-1px);
-}
-
-.tabActive {
-  background: rgba(198, 167, 94, 0.18);
-  border: 1px solid rgba(198, 167, 94, 0.55);
-  color: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 0 18px rgba(198, 167, 94, 0.15);
-}
-
-.loginBox {
-  margin-bottom: 20px;
-  text-align: center;
-  background: rgba(255, 80, 80, 0.08);
-  border: 1px solid rgba(255, 80, 80, 0.2);
-  border-radius: 12px;
-  padding: 12px 16px;
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.loginLink {
-  color: var(--gold);
-  text-decoration: underline;
-  font-weight: 700;
-}
-
-.loginLink:hover {
-  color: var(--gold-hover);
-}
-
-.successBox {
-  margin-bottom: 20px;
-  background: rgba(80, 200, 120, 0.08);
-  border: 1px solid rgba(80, 200, 120, 0.2);
-  border-radius: 12px;
-  padding: 12px 16px;
-  font-size: 13px;
-  color: rgba(80, 200, 120, 0.92);
-}
-
-.errorBox {
-  margin-bottom: 20px;
-  background: rgba(255, 80, 80, 0.08);
-  border: 1px solid rgba(255, 80, 80, 0.2);
-  border-radius: 12px;
-  padding: 12px 16px;
-  font-size: 13px;
-  color: rgba(255, 80, 80, 0.92);
-}
-
-.loading {
-  text-align: center;
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.65);
-  padding: 40px 0;
-}
-
-.currentFree {
-  margin-bottom: 20px;
-  text-align: center;
-}
-
-.currentFreeInner {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  padding: 16px 36px;
-  background: linear-gradient(180deg, rgba(18, 18, 18, 0.92), rgba(8, 8, 8, 0.96));
-  border: 1px solid rgba(198, 167, 94, 0.18);
-  border-radius: 18px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-}
-
-.currentFreeLabel {
-  font-size: 10px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  color: rgba(255, 255, 255, 0.45);
-}
-
-.currentFreeName {
-  font-size: 18px;
-  font-weight: 800;
-  color: rgba(255, 255, 255, 0.92);
-}
-
-.currentFreeDesc {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.58);
-}
-
 .grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 22px;
-  align-items: stretch;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
-@media (max-width: 860px) {
+@media (min-width: 768px) {
   .grid {
-    grid-template-columns: 1fr;
-    max-width: 420px;
-    margin: 0 auto;
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
-/* CARD “PLACA” */
+@media (min-width: 1024px) {
+  .grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
 .card {
-  background:
-    radial-gradient(900px 600px at 50% -20%, rgba(198, 167, 94, 0.12), transparent 58%),
-    linear-gradient(180deg, rgba(16, 16, 16, 0.98), rgba(8, 8, 8, 0.98));
-  border: 1px solid rgba(198, 167, 94, 0.28);
-  border-radius: 22px;
-  padding: 30px 22px 24px;
+  background: #141414;
+  border: 1px solid rgba(198, 167, 94, 0.2);
+  border-radius: 16px;
+  padding: 32px 24px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 18px;
-  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease, filter 0.25s ease;
+  transition: transform 0.2s, border-color 0.2s;
   position: relative;
-  overflow: hidden;
-  box-shadow: 0 14px 38px rgba(0, 0, 0, 0.45);
-}
-
-/* Marco interior + brillo */
-.card::before {
-  content: "";
-  position: absolute;
-  inset: 12px;
-  border-radius: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  pointer-events: none;
-}
-
-/* “Vignette” y textura */
-.card::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(900px 500px at 50% 20%, rgba(255, 255, 255, 0.05), transparent 55%),
-    radial-gradient(900px 500px at 50% 110%, rgba(0, 0, 0, 0.55), transparent 55%);
-  opacity: 1;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  min-height: 620px;
 }
 
 .card:hover {
-  transform: translateY(-5px);
-  border-color: rgba(198, 167, 94, 0.55);
-  box-shadow:
-    0 18px 50px rgba(0, 0, 0, 0.55),
-    0 0 26px rgba(198, 167, 94, 0.10);
+  border-color: rgba(198, 167, 94, 0.5);
+  transform: translateY(-4px);
 }
 
-.cardActive {
-  border-color: rgba(198, 167, 94, 0.85);
-  box-shadow:
-    0 0 0 1px rgba(198, 167, 94, 0.55),
-    0 0 26px rgba(198, 167, 94, 0.14),
-    0 18px 50px rgba(0, 0, 0, 0.55);
+.featured {
+  border-color: #c6a75e;
+  box-shadow: 0 0 30px rgba(198, 167, 94, 0.15);
 }
 
-/* DIAMANTE (dominante) */
-.cardFeatured {
-  border-color: rgba(198, 167, 94, 0.78);
-  box-shadow:
-    0 0 0 1px rgba(198, 167, 94, 0.35),
-    0 0 46px rgba(198, 167, 94, 0.16),
-    0 0 110px rgba(198, 167, 94, 0.07),
-    0 18px 55px rgba(0, 0, 0, 0.60);
-}
-
-.cardFeatured:hover {
-  transform: translateY(-6px) scale(1.012);
-  border-color: rgba(198, 167, 94, 0.92);
-  box-shadow:
-    0 0 0 1px rgba(198, 167, 94, 0.45),
-    0 0 58px rgba(198, 167, 94, 0.22),
-    0 0 140px rgba(198, 167, 94, 0.09),
-    0 22px 60px rgba(0, 0, 0, 0.62);
-}
-
-/* Línea superior dorada */
-.cardFeatured::before {
-  border-color: rgba(255, 255, 255, 0.08);
-}
-
-.cardFeaturedTopBar {
-  display: none;
-}
-
-.bestLabel {
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  font-size: 10px;
-  font-weight: 900;
-  color: #0a0a0a;
-  background: linear-gradient(90deg, #b68a2a, #f3d77d, #b68a2a);
-  padding: 6px 14px;
-  border-radius: 999px;
-  text-transform: uppercase;
-  letter-spacing: 0.9px;
-  box-shadow: 0 10px 22px rgba(198, 167, 94, 0.25);
-  z-index: 2;
-}
-
-/* Badge tipo “metal” */
-.badge {
-  font-size: 13px;
-  font-weight: 900;
-  padding: 7px 24px;
-  border-radius: 10px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  white-space: nowrap;
-  border: 1px solid rgba(255, 255, 255, 0.10);
-  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.35);
-  position: relative;
-  z-index: 1;
-  overflow: hidden;
-}
-
-.badge::before {
-  content: "";
-  position: absolute;
-  inset: -40% -40%;
-  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.32), transparent 55%);
-  transform: rotate(12deg);
-  opacity: 0.55;
-  pointer-events: none;
-}
-
-.priceRow {
+.planHeader {
+  margin-bottom: 24px;
   text-align: center;
-  padding: 8px 0 6px;
-  position: relative;
-  z-index: 1;
-  width: 100%;
 }
 
-/* Separador fino como la referencia */
-.priceRow::after {
-  content: "";
-  display: block;
-  margin: 14px auto 0;
-  width: 82%;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.12), transparent);
+.bestValue {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #c6a75e;
+  color: #000;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  z-index: 10;
+  white-space: nowrap;
 }
 
-.price {
-  font-family: 'Playfair Display', serif;
-  font-size: 42px;
-  font-weight: 900;
-  letter-spacing: -0.6px;
-  text-shadow: 0 0 26px rgba(198, 167, 94, 0.18);
+.badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 800;
+  margin-bottom: 12px;
 }
 
-.period {
+.badge_plus {
+  background: rgba(205, 127, 50, 0.2);
+  color: #cd7f32;
+  border: 1px solid rgba(205, 127, 50, 0.4);
+}
+
+.badge_platino {
+  background: rgba(229, 228, 226, 0.1);
+  color: #e5e4e2;
+  border: 1px solid rgba(229, 228, 226, 0.3);
+}
+
+.badge_diamante {
+  background: rgba(198, 167, 94, 0.2);
+  color: #c6a75e;
+  border: 1px solid rgba(198, 167, 94, 0.5);
+}
+
+.planTitle {
+  font-size: 18px;
+  font-weight: 800;
+  color: #fff;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.priceList {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.priceItem {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.50);
-  margin-left: 4px;
+  color: #888;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.priceItemActive {
+  color: #c6a75e;
+  font-weight: 700;
+}
+
+.priceItem:last-child {
+  border-bottom: none;
+}
+
+.priceDays {
   font-weight: 500;
 }
 
 .features {
   list-style: none;
   padding: 0;
-  margin: 0;
-  width: 100%;
-  padding-top: 16px;
-  position: relative;
-  z-index: 1;
+  margin: 0 0 24px 0;
+  flex-grow: 1;
 }
 
-.featureItem {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
+.features li {
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.78);
-  padding: 6px 0;
-  line-height: 1.55;
+  color: #bbb;
+  margin-bottom: 10px;
+  line-height: 1.4;
+  display: flex;
+  gap: 8px;
 }
 
-.checkIcon {
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
-  margin-top: 2px;
-  filter: drop-shadow(0 0 6px rgba(198, 167, 94, 0.30));
+.extraFeature {
+  margin-top: 16px;
+  font-weight: 700;
+  color: #fff !important;
 }
 
-.btn {
-  width: 92%;
-  text-align: center;
-  margin-top: auto;
-  padding: 14px 24px;
-  font-size: 15px;
-  font-weight: 800;
-  font-family: inherit;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.10);
-  cursor: pointer;
-  background: linear-gradient(90deg, #b68a2a, #f3d77d, #b68a2a);
-  color: #131313;
-  box-shadow: 0 14px 30px rgba(198, 167, 94, 0.20);
-  transition: box-shadow 0.2s, transform 0.2s, filter 0.2s, opacity 0.15s;
-  position: relative;
-  z-index: 1;
+.extraSub {
+  padding-left: 18px;
+  color: #777 !important;
+  font-size: 12px !important;
+  margin-bottom: 4px !important;
 }
 
-.btn:hover {
-  box-shadow: 0 18px 40px rgba(198, 167, 94, 0.28);
-  transform: translateY(-2px);
-  filter: brightness(1.03);
-}
-
-.btn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-  box-shadow: none;
-  transform: none;
-}
-
-.currentLabel {
-  width: 92%;
-  text-align: center;
-  font-size: 14px;
-  font-weight: 800;
-  color: rgba(198, 167, 94, 0.95);
-  padding: 14px;
-  background: rgba(198, 167, 94, 0.07);
-  border: 1px solid rgba(198, 167, 94, 0.22);
-  border-radius: 12px;
-  margin-top: auto;
-  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.35);
-  position: relative;
-  z-index: 1;
-}
-
-.note {
-  text-align: center;
+.planFooterText {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.45);
-  margin-top: 28px;
-}
-
-/* 🔥 FIX tamaño imágenes planes */
-.planImage {
-  width: 100%;
-  max-width: 260px;
-  height: auto;
-  display: block;
-  margin: 0 auto;
-  object-fit: contain;
-}
-
-/* 🔥 Tabs duración — PRO */
-.durationTabs {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  margin: 18px 0 28px;
-  flex-wrap: wrap;
-}
-
-.durationTab {
-  padding: 6px 14px;
-  border-radius: 999px;
-  border: 1px solid rgba(212, 175, 55, 0.35);
-  background: rgba(255, 255, 255, 0.04);
-  color: #e7d8a6;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all .18s ease;
-}
-
-.durationTab:hover {
-  border-color: rgba(212, 175, 55, 0.7);
-  background: rgba(212, 175, 55, 0.08);
-}
-
-.durationTabActive {
-  background: linear-gradient(135deg, #d4af37, #f1d17a);
-  color: #1a1a1a;
-  border-color: transparent;
-  font-weight: 600;
-  box-shadow: 0 6px 18px rgba(212, 175, 55, .25);
-}
-
-
-/* =========================
-   VIAVIP PLANES — FIX PRO
-   - Imágenes más grandes
-   - Cards mismo tamaño
-   - Borde dorado más sutil
-   - Tabs prolijas
-   ========================= */
-
-/* Aliases por compatibilidad (si algún lugar usa nombres viejos) */
-.durationSwitch {
-  composes: durationTabs;
-}
-
-.durationBtn {
-  composes: durationTab;
-}
-
-.active {
-  composes: durationTabActive;
-}
-
-.featured {
-  composes: cardFeatured;
+  color: #666;
+  font-style: italic;
+  margin-bottom: 24px;
+  line-height: 1.5;
+  text-align: center;
 }
 
 .currentPlan {
-  composes: currentLabel;
+  background: rgba(34, 197, 94, 0.1);
+  color: #22c55e;
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  text-align: center;
+  padding: 14px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 14px;
+  margin-top: auto;
 }
 
-/* Card: borde menos “amarillo” y menos glow */
-.card {
-  border-color: rgba(198, 167, 94, 0.18) !important;
-  /* más sutil */
-  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.48) !important;
-}
-
-/* Marco interior más fino */
-.card::before {
-  inset: 16px !important;
-  /* menos “marco” */
-  border-color: rgba(255, 255, 255, 0.045) !important;
-}
-
-/* Hover: menos glow dorado */
-.card:hover {
-  border-color: rgba(198, 167, 94, 0.32) !important;
-  box-shadow:
-    0 18px 46px rgba(0, 0, 0, 0.58),
-    0 0 18px rgba(198, 167, 94, 0.06) !important;
-}
-
-/* Diamante: dominante pero sin “halo gigante” */
-.cardFeatured {
-  border-color: rgba(198, 167, 94, 0.30) !important;
-  box-shadow:
-    0 0 0 1px rgba(198, 167, 94, 0.12),
-    0 0 34px rgba(198, 167, 94, 0.08),
-    0 16px 52px rgba(0, 0, 0, 0.62) !important;
-}
-
-.cardFeatured:hover {
-  border-color: rgba(198, 167, 94, 0.42) !important;
-  box-shadow:
-    0 0 0 1px rgba(198, 167, 94, 0.16),
-    0 0 42px rgba(198, 167, 94, 0.10),
-    0 20px 60px rgba(0, 0, 0, 0.66) !important;
-}
-
-/* Cards igual altura (estable) */
-.card {
-  min-height: 520px;
-  /* más grande, deja respirar */
-}
-
-/* Contenedor de imagen para normalizar tamaño */
-.imageWrap {
-  width: 100%;
-  height: 340px;
-  /* más grande => imagen se ve grande */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Imagen más grande, sin deformar */
-.planImage {
-  max-width: 320px;
-  max-height: 320px;
-  width: auto;
-  height: auto;
-  object-fit: contain;
-}
-
-/* Tabs duración: más premium y consistentes */
 .durationTabs {
-  display: inline-flex !important;
+  display: flex;
   justify-content: center;
   gap: 10px;
-  margin: 18px 0 28px;
-  padding: 6px;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.10);
-  background: rgba(255, 255, 255, 0.03);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  margin: 32px 0;
 }
 
 .durationTab {
-  padding: 8px 16px;
-  border-radius: 999px;
-  border: 1px solid rgba(198, 167, 94, 0.22);
-  background: transparent;
-  color: rgba(255, 255, 255, 0.82);
-  font-size: 13px;
-  font-weight: 700;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  color: #777;
+  padding: 10px 24px;
+  border-radius: 30px;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
-  transition: transform .14s ease, background .14s ease, border-color .14s ease;
-}
-
-.durationTab:hover {
-  transform: translateY(-1px);
-  border-color: rgba(198, 167, 94, 0.38);
-  background: rgba(198, 167, 94, 0.08);
+  transition: all 0.2s;
 }
 
 .durationTabActive {
-  background: linear-gradient(135deg, #d4af37, #f1d17a);
-  color: #121212;
-  border-color: transparent;
-  box-shadow: 0 6px 16px rgba(212, 175, 55, 0.18);
+  background: #c6a75e;
+  color: #000;
+  border-color: #c6a75e;
+  font-weight: 700;
+  box-shadow: 0 4px 15px rgba(198, 167, 94, 0.3);
 }
