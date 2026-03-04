@@ -44,7 +44,7 @@ export default function AdminPagosPage() {
         .select("is_admin, rol")
         .eq("id", user.id)
         .maybeSingle();
-      if (!profile?.is_admin) {
+      if (!profile?.is_admin && profile?.rol !== "admin") {
         router.replace("/");
         return;
       }
@@ -60,7 +60,9 @@ export default function AdminPagosPage() {
 
   async function fetchPagos() {
     try {
-      const res = await fetch(`/api/admin/pagos?estado=${tab}`);
+      const res = await fetch(`/api/admin/pagos?estado=${tab}`, {
+        credentials: "include",
+      });
       const data = await res.json();
       setPagos(data.pagos || []);
     } catch {
@@ -86,6 +88,7 @@ export default function AdminPagosPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ pago_id: pagoId, accion }),
+        credentials: "include",
       });
       fetchPagos();
     } catch {}
@@ -409,13 +412,6 @@ export default function AdminPagosPage() {
               objectFit: "contain",
             }}
             onClick={(e) => e.stopPropagation()}
-          />
-        </div>
-      )}
-    </div>
-  );
-}
-.stopPropagation()}
           />
         </div>
       )}

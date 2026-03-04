@@ -22,8 +22,7 @@ const INSTRUCCIONES: Record<string, { titulo: string; pasos: string[] }> = {
     titulo: "Pago en Abitab",
     pasos: [
       "Acercate a cualquier local Abitab",
-      "Indica que queres hacer un pago a Jonathan David Semelman Fontaine",
-      "Cédula: 37884659",
+      "Indica que queres hacer un pago a VIAVIP",
       "Monto indicado abajo",
       "Guarda el comprobante y subilo aca",
     ],
@@ -32,8 +31,7 @@ const INSTRUCCIONES: Record<string, { titulo: string; pasos: string[] }> = {
     titulo: "Pago en RedPagos",
     pasos: [
       "Acercate a cualquier local RedPagos",
-      "Indica que queres hacer un pago a Jonathan David Semelman Fontaine",
-      "Cédula: 37884659",
+      "Indica que queres hacer un pago a VIAVIP",
       "Monto indicado abajo",
       "Guarda el comprobante y subilo aca",
     ],
@@ -41,9 +39,9 @@ const INSTRUCCIONES: Record<string, { titulo: string; pasos: string[] }> = {
   transferencia: {
     titulo: "Transferencia bancaria",
     pasos: [
-      "Realiza una transferencia Por Prex:",
-      "Cuenta: 21657689",
-      "Nombre: Jonathan Semelman",
+      "Realiza una transferencia al siguiente BROU:",
+      "Cuenta: 001580853-00001",
+      "Nombre: VIAVIP SRL",
       "Concepto: tu email de registro",
       "Subi el comprobante de la transferencia aca",
     ],
@@ -204,8 +202,7 @@ export default function PlanesPage() {
 
   function getPrecio(plan: string, dias: number) {
     const item = catalogo.find(
-      (p: any) =>
-        p.plan.toLowerCase() === plan.toLowerCase() && p.duracion_dias === dias,
+      (p: any) => p.plan.toLowerCase() === plan.toLowerCase() && p.duracion_dias === dias
     );
     return item ? item.precio_uyu : 0;
   }
@@ -429,25 +426,15 @@ export default function PlanesPage() {
                 {isCurrent ? (
                   <div className={styles.currentPlan}>Plan actual</div>
                 ) : (
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "10px",
-                      width: "100%",
-                    }}
-                  >
-                    <div
-                      style={{
-                        fontSize: "24px",
-                        fontWeight: "bold",
-                        color: "#c6a75e",
-                        textAlign: "center",
-                        marginBottom: "10px",
-                      }}
-                    >
-                      ${formatPrice(getPrecio(planId, duration))} /{" "}
-                      {duration === 90 ? "3 meses" : `${duration} días`}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
+                    <div style={{ 
+                      fontSize: '24px', 
+                      fontWeight: 'bold', 
+                      color: '#c6a75e', 
+                      textAlign: 'center',
+                      marginBottom: '10px'
+                    }}>
+                      ${formatPrice(getPrecio(planId, duration))} / {duration === 90 ? "3 meses" : `${duration} días`}
                     </div>
                     <button
                       className="vv-btn vv-plan-btn"
