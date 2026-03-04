@@ -42,18 +42,18 @@ export async function GET(req: NextRequest) {
   const sc = getServiceClient();
   if (!sc) return NextResponse.json({ error: "Error de configuración" }, { status: 500 });
 
-  const { data: publicacionPrecios } = await sc
+  const { data: publicaciones } = await sc
     .from("publicacion_precios")
     .select("*")
     .order("duracion_dias", { ascending: true });
 
-  const { data: planesCatalogo } = await sc
+  const { data: planes } = await sc
     .from("planes_catalogo")
     .select("*")
     .order("plan", { ascending: true })
     .order("duracion_dias", { ascending: true });
 
-  return NextResponse.json({ publicacionPrecios, planesCatalogo });
+  return NextResponse.json({ publicaciones, planes });
 }
 
 export async function PATCH(req: NextRequest) {

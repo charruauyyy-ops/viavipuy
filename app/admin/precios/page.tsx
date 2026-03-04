@@ -63,8 +63,8 @@ export default function AdminPreciosPage() {
     try {
       const res = await fetch("/api/admin/precios");
       const data = await res.json();
-      if (data.publicacionPrecios) setPublicacionPrecios(data.publicacionPrecios);
-      if (data.planesCatalogo) setPlanesCatalogo(data.planesCatalogo);
+      if (data.publicaciones) setPublicacionPrecios(data.publicaciones);
+      if (data.planes) setPlanesCatalogo(data.planes);
     } catch (err) {
       console.error("Error fetching prices:", err);
     }
