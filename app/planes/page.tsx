@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useRef } from "react";
+import { useEffect, useMemo, useState, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getSupabase } from "@/lib/supabaseClient";
 import { PLANS, PLAN_ORDER, getPlanPrice } from "@/lib/plans";
@@ -48,8 +48,7 @@ const INSTRUCCIONES: Record<string, { titulo: string; pasos: string[] }> = {
   },
 };
 
-
-export default function PlanesPage() {
+function PlanesContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -98,67 +97,29 @@ export default function PlanesPage() {
     }
   }, [searchParams]);
 
-  // Helper: fetch que manda Authorization para que los route handlers puedan validar session aunque sea localStorage.
   async function authFetch(input: RequestInfo | URL, init: RequestInit = {}) {
     const headers = new Headers(init.headers || {});
-
     const supabase = getSupabase();
     const sessionRes = supabase ? await supabase.auth.getSession() : null;
     const token = sessionRes?.data?.session?.access_token?.trim();
-
-    if (token) {
-      headers.set("Authorization", `Bearer ${token}`);
-    } else {
-      headers.delete("Authorization");
-    }
-
+    if (token) headers.set("Authorization", `Bearer ${token}`);
     const isFormData = init.body instanceof FormData;
-
-    if (!isFormData && !headers.has("Content-Type")) {
-      headers.set("Content-Type", "application/json");
-    }
-
-    return fetch(input, {
-      ...init,
-      headers,
-      credentials: "include",
-    });
+    if (!isFormData && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
+    return fetch(input, { ...init, headers, credentials: "include" });
   }
 
   useEffect(() => {
     async function load() {
       const supabase = getSupabase();
-      if (!supabase) {
-        setLoading(false);
-        return;
-      }
-
-      // Trae session + user desde el cliente (localStorage)
+      if (!supabase) { setLoading(false); return; }
       const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData?.session?.access_token || null;
-      setSessionToken(token);
-
+      setSessionToken(sessionData?.session?.access_token || null);
       const { data } = await supabase.auth.getUser();
       const user = data?.user;
-      if (!user) {
-        setUserId(null);
-        setLoading(false);
-        return;
-      }
-
+      if (!user) { setUserId(null); setLoading(false); return; }
       setUserId(user.id);
-
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("plan_actual, plan_estado")
-        .eq("id", user.id)
-        .maybeSingle();
-
-      if (profile) {
-        setCurrentPlan(profile.plan_actual || "free");
-        setPlanEstado(profile.plan_estado || "sin_plan");
-      }
-
+      const { data: profile } = await supabase.from("profiles").select("plan_actual, plan_estado").eq("id", user.id).maybeSingle();
+      if (profile) { setCurrentPlan(profile.plan_actual || "free"); setPlanEstado(profile.plan_estado || "sin_plan"); }
       setLoading(false);
     }
     load();
@@ -168,328 +129,130 @@ export default function PlanesPage() {
     try {
       const res = await fetch("/api/planes/catalogo", { cache: "no-store" });
       const data = await res.json();
-      if (Array.isArray(data)) {
-        setCatalogo(data);
-      }
-    } catch (err) {
-      console.error("Error fetching catalogo:", err);
-    }
+      if (Array.isArray(data)) setCatalogo(data);
+    } catch (err) { console.error("Error fetching catalogo:", err); }
   }
 
-  useEffect(() => {
-    fetchCatalogo();
-  }, []);
+  useEffect(() => { fetchCatalogo(); }, []);
 
   function getPrecio(plan: string, dias: number) {
-    const item = catalogo.find(
-      (p: any) => p.plan.toLowerCase() === plan.toLowerCase() && p.duracion_dias === dias
-    );
+    const item = catalogo.find((p: any) => p.plan.toLowerCase() === plan.toLowerCase() && p.duracion_dias === dias);
     return item ? item.precio_uyu : 0;
   }
 
   function handleActivate(planId: string) {
-    setSelectedPlan(planId);
-    setSelectedMetodo(null);
-    setModalStep("metodo");
-    setPagoId(null);
-    setPagoError(null);
-    setComprobanteUploaded(false);
-    setShowModal(true);
+    setSelectedPlan(planId); setSelectedMetodo(null); setModalStep("metodo"); setPagoId(null); setPagoError(null); setComprobanteUploaded(false); setShowModal(true);
   }
 
   async function handleSelectMetodo(metodo: MetodoPago) {
     if (!selectedPlan || !userId) return;
-
-    setSelectedMetodo(metodo);
-    setProcessingPago(true);
-    setPagoError(null);
-
+    setSelectedMetodo(metodo); setProcessingPago(true); setPagoError(null);
     if (metodo === "mercadopago") {
       setModalStep("procesando");
       try {
-        const res = await authFetch("/api/pagos/mercadopago", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            plan_id: selectedPlan,
-            duracion_dias: duration,
-          }),
-        });
+        const res = await authFetch("/api/pagos/mercadopago", { method: "POST", body: JSON.stringify({ plan_id: selectedPlan, duracion_dias: duration }) });
         const data = await res.json();
-        if (data.init_point) {
-          window.location.href = data.init_point;
-          return;
-        }
-        setPagoError(data.error || "Error al procesar pago");
-        setModalStep("metodo");
-      } catch {
-        setPagoError("Error de conexion");
-        setModalStep("metodo");
-      }
-      setProcessingPago(false);
-      return;
+        if (data.init_point) { window.location.href = data.init_point; return; }
+        setPagoError(data.error || "Error al procesar pago"); setModalStep("metodo");
+      } catch { setPagoError("Error de conexion"); setModalStep("metodo"); }
+      setProcessingPago(false); return;
     }
-
     try {
-      const res = await authFetch("/api/pagos/crear", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          plan_id: selectedPlan,
-          duracion_dias: duration,
-          metodo_pago: metodo,
-        }),
-      });
+      const res = await authFetch("/api/pagos/crear", { method: "POST", body: JSON.stringify({ plan_id: selectedPlan, duracion_dias: duration, metodo_pago: metodo }) });
       const data = await res.json();
-
-      if (data.pago_id) {
-        setPagoId(data.pago_id);
-        setModalStep("instrucciones");
-      } else {
-        setPagoError(data.error || "Error al crear pago");
-      }
-    } catch {
-      setPagoError("Error de conexion");
-    }
-
+      if (data.pago_id) { setPagoId(data.pago_id); setModalStep("instrucciones"); } else setPagoError(data.error || "Error al crear pago");
+    } catch { setPagoError("Error de conexion"); }
     setProcessingPago(false);
   }
 
   async function handleUploadComprobante() {
     if (!fileInputRef.current?.files?.[0] || !pagoId) return;
-
-    setUploadingComprobante(true);
-    setPagoError(null);
-
+    setUploadingComprobante(true); setPagoError(null);
     try {
       const formData = new FormData();
       formData.append("pago_id", pagoId);
       formData.append("comprobante", fileInputRef.current.files[0]);
-
-      const res = await authFetch("/api/pagos/comprobante", {
-        method: "POST",
-        body: formData,
-      });
+      const res = await authFetch("/api/pagos/comprobante", { method: "POST", body: formData });
       const data = await res.json();
-
-      if (data.ok) setComprobanteUploaded(true);
-      else setPagoError(data.error || "Error al subir comprobante");
-    } catch {
-      setPagoError("Error de conexion");
-    }
-
+      if (data.ok) setComprobanteUploaded(true); else setPagoError(data.error || "Error al subir comprobante");
+    } catch { setPagoError("Error de conexion"); }
     setUploadingComprobante(false);
   }
 
-  const durationTabs = useMemo(
-    () =>
-      [
-        { key: 7 as const, label: "7 dias" },
-        { key: 30 as const, label: "30 dias" },
-        { key: 90 as const, label: "3 meses" },
-      ] as const,
-    [],
-  );
-
-  const selectedPlanPrice = selectedPlan
-    ? getPrecio(selectedPlan, duration)
-    : 0;
-
-  function formatPrice(n: number) {
-    return n >= 1000
-      ? `${Math.floor(n / 1000)}.${String(n % 1000).padStart(3, "0")}`
-      : String(n);
-  }
+  const durationTabs = useMemo(() => [{ key: 7 as const, label: "7 dias" }, { key: 30 as const, label: "30 dias" }, { key: 90 as const, label: "3 meses" }] as const, []);
+  const selectedPlanPrice = selectedPlan ? getPrecio(selectedPlan, duration) : 0;
+  function formatPrice(n: number) { return n >= 1000 ? `${Math.floor(n / 1000)}.${String(n % 1000).padStart(3, "0")}` : String(n); }
 
   return (
     <main className="vv-form-page">
       <div className="vv-planes-container">
         <div className="vv-form-header" style={{ textAlign: "center" }}>
           <h1 className="vv-form-title">Planes</h1>
-          <p className="vv-form-subtitle">
-            Elegi tu duracion y activa el plan que te da mas exposicion.
-          </p>
-
+          <p className="vv-form-subtitle">Elegi tu duracion y activa el plan que te da mas exposicion.</p>
           <div className={styles.durationTabs}>
             {durationTabs.map((t) => (
-              <button
-                key={t.key}
-                onClick={() => setDuration(t.key)}
-                className={`${styles.durationTab} ${duration === t.key ? styles.durationTabActive : ""}`}
-                data-testid={`btn-duration-${t.key}`}
-              >
-                {t.label}
-              </button>
+              <button key={t.key} onClick={() => setDuration(t.key)} className={`${styles.durationTab} ${duration === t.key ? styles.durationTabActive : ""}`} data-testid={`btn-duration-${t.key}`}>{t.label}</button>
             ))}
           </div>
         </div>
-
         {!loading && !userId && (
-          <div
-            style={{
-              maxWidth: 600,
-              margin: "0 auto 20px",
-              padding: "14px 18px",
-              borderRadius: 10,
-              fontSize: 14,
-              textAlign: "center",
-              background: "rgba(198,167,94,0.06)",
-              border: "1px solid rgba(198,167,94,0.18)",
-              color: "rgba(255,255,255,0.7)",
-            }}
-            data-testid="text-login-cta"
-          >
-            <a
-              href="/login?returnTo=/planes"
-              style={{
-                color: "#c6a75e",
-                fontWeight: 700,
-                textDecoration: "underline",
-              }}
-              data-testid="link-login-planes"
-            >
-              Inicia sesion
-            </a>{" "}
-            para activar un plan.
+          <div style={{ maxWidth: 600, margin: "0 auto 20px", padding: "14px 18px", borderRadius: 10, fontSize: 14, textAlign: "center", background: "rgba(198,167,94,0.06)", border: "1px solid rgba(198,167,94,0.18)", color: "rgba(255,255,255,0.7)" }} data-testid="text-login-cta">
+            <a href="/login?returnTo=/planes" style={{ color: "#c6a75e", fontWeight: 700, textDecoration: "underline" }} data-testid="link-login-planes">Inicia sesion</a> para activar un plan.
           </div>
         )}
-
         {flashMsg && (
-          <div
-            style={{
-              maxWidth: 600,
-              margin: "0 auto 20px",
-              padding: "14px 18px",
-              borderRadius: 10,
-              fontSize: 14,
-              textAlign: "center",
-              background:
-                flashMsg.type === "success"
-                  ? "rgba(80,200,120,0.08)"
-                  : "rgba(255,80,80,0.08)",
-              border: `1px solid ${
-                flashMsg.type === "success"
-                  ? "rgba(80,200,120,0.2)"
-                  : "rgba(255,80,80,0.2)"
-              }`,
-              color:
-                flashMsg.type === "success"
-                  ? "rgba(80,200,120,0.92)"
-                  : "rgba(255,80,80,0.92)",
-            }}
-            data-testid="text-flash-msg"
-          >
-            {flashMsg.text}
-          </div>
+          <div style={{ maxWidth: 600, margin: "0 auto 20px", padding: "14px 18px", borderRadius: 10, fontSize: 14, textAlign: "center", background: flashMsg.type === "success" ? "rgba(80,200,120,0.08)" : "rgba(255,80,80,0.08)", border: `1px solid ${flashMsg.type === "success" ? "rgba(80,200,120,0.2)" : "rgba(255,80,80,0.2)"}`, color: flashMsg.type === "success" ? "rgba(80,200,120,0.92)" : "rgba(255,80,80,0.92)" }} data-testid="text-flash-msg">{flashMsg.text}</div>
         )}
-
         <div className={styles.grid}>
           {PLAN_ORDER.filter((p) => p !== "free").map((planId) => {
-            const plan = PLANS[planId];
             const isCurrent = currentPlan === planId && planEstado === "activo";
-
             return (
-              <div
-                key={planId}
-                className={`${styles.card} ${planId === "diamante" ? styles.featured : ""}`}
-              >
+              <div key={planId} className={`${styles.card} ${planId === "diamante" ? styles.featured : ""}`}>
                 <div className={styles.planHeader}>
                   {planId === "diamante" && <div className={styles.bestValue}>Más elegido</div>}
-                  <div className={`${styles.badge} ${styles[`badge_${planId}`]}`}>
-                    {planId.toUpperCase()}
-                  </div>
+                  <div className={`${styles.badge} ${styles[`badge_${planId}`]}`}>{planId.toUpperCase()}</div>
                   <h3 className={styles.planTitle}>
                     {planId === "plus" && "PLUS — Más visibilidad"}
                     {planId === "platino" && "PLATINO — Exposición superior"}
                     {planId === "diamante" && "DIAMANTE — Máxima visibilidad"}
                   </h3>
                 </div>
-
                 <div className={styles.priceList}>
                   {[7, 30, 90].map((d) => (
-                    <div 
-                      key={d} 
-                      className={`${styles.priceItem} ${duration === d ? styles.priceItemActive : ""}`}
-                    >
+                    <div key={d} className={`${styles.priceItem} ${duration === d ? styles.priceItemActive : ""}`}>
                       <span className={styles.priceDays}>{d === 90 ? "3 meses" : `${d} días`}</span>
                       <span className={styles.priceValue}>${formatPrice(getPrecio(planId, d))} UYU</span>
                     </div>
                   ))}
                 </div>
-
                 <ul className={styles.features}>
                   {planId === "plus" && (
                     <>
-                      <li>✔ Hasta 25 fotos en tu perfil</li>
-                      <li>✔ Historias destacadas visibles</li>
-                      <li>✔ Aparece en búsquedas de clientes</li>
-                      <li>✔ Aparece en carrusel de destacadas</li>
-                      <li>✔ Panel de métricas (visitas, clics WhatsApp, tiempo promedio)</li>
-                      <li>✔ Badge PLUS en tu perfil</li>
-                      <li>✔ Prioridad leve en listados</li>
+                      <li>✔ Hasta 25 fotos en tu perfil</li><li>✔ Historias destacadas visibles</li><li>✔ Aparece en búsquedas de clientes</li><li>✔ Aparece en carrusel de destacadas</li><li>✔ Panel de métricas</li><li>✔ Badge PLUS</li><li>✔ Prioridad leve</li>
                     </>
                   )}
                   {planId === "platino" && (
                     <>
-                      <li>✔ Hasta 25 fotos en tu perfil</li>
-                      <li>✔ Historias destacadas visibles</li>
-                      <li>✔ Aparece en búsquedas de clientes</li>
-                      <li>✔ Aparece en carrusel de destacadas</li>
-                      <li>✔ Panel completo de métricas</li>
-                      <li>✔ Badge PLATINO premium</li>
-                      <li>✔ Boost en ranking</li>
-                      <li>✔ Prioridad media en listados</li>
+                      <li>✔ Hasta 25 fotos en tu perfil</li><li>✔ Historias destacadas visibles</li><li>✔ Aparece en búsquedas de clientes</li><li>✔ Aparece en carrusel de destacadas</li><li>✔ Panel completo de métricas</li><li>✔ Badge PLATINO premium</li><li>✔ Boost en ranking</li><li>✔ Prioridad media</li>
                     </>
                   )}
                   {planId === "diamante" && (
                     <>
-                      <li>✔ Hasta 25 fotos en tu perfil</li>
-                      <li>✔ Historias destacadas prioritarias</li>
-                      <li>✔ Aparece en búsquedas de clientes</li>
-                      <li>✔ Aparece en carrusel de destacadas</li>
-                      <li>✔ Panel avanzado de métricas</li>
-                      <li>✔ Badge DIAMANTE premium</li>
-                      <li>✔ Máxima prioridad en ranking</li>
-                      <li>✔ Prioridad máxima en listados</li>
-                      <li className={styles.extraFeature}>✔ Datos avanzados desbloqueados</li>
-                      <li className={styles.extraSub}>- tendencias</li>
-                      <li className={styles.extraSub}>- actividad en tiempo real</li>
-                      <li className={styles.extraSub}>- favoritos</li>
-                      <li className={styles.extraSub}>- métricas completas</li>
+                      <li>✔ Hasta 25 fotos en tu perfil</li><li>✔ Historias destacadas prioritarias</li><li>✔ Aparece en búsquedas de clientes</li><li>✔ Aparece en carrusel de destacadas</li><li>✔ Panel avanzado de métricas</li><li>✔ Badge DIAMANTE premium</li><li>✔ Máxima prioridad</li><li>✔ Prioridad máxima</li>
+                      <li className={styles.extraFeature}>✔ Datos avanzados desbloqueados</li><li className={styles.extraSub}>- tendencias</li><li className={styles.extraSub}>- actividad en tiempo real</li><li className={styles.extraSub}>- favoritos</li><li className={styles.extraSub}>- métricas completas</li>
                     </>
                   )}
                 </ul>
-
                 <p className={styles.planFooterText}>
-                  {planId === "plus" && "Más visibilidad = más visitas a tu perfil y más oportunidades de contacto."}
-                  {planId === "platino" && "Mayor exposición en la plataforma = más tráfico y más oportunidades de recibir contactos."}
-                  {planId === "diamante" && "La mayor exposición posible en la plataforma para recibir el máximo de visitas y contactos."}
+                  {planId === "plus" && "Más visibilidad = más visitas a tu perfil."}
+                  {planId === "platino" && "Mayor exposición = más tráfico."}
+                  {planId === "diamante" && "La mayor exposición posible."}
                 </p>
-
-                {isCurrent ? (
-                  <div className={styles.currentPlan}>Plan actual</div>
-                ) : (
+                {isCurrent ? <div className={styles.currentPlan}>Plan actual</div> : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%', marginTop: 'auto' }}>
-                    <div style={{ 
-                      fontSize: '20px', 
-                      fontWeight: 'bold', 
-                      color: '#c6a75e', 
-                      textAlign: 'center',
-                      marginBottom: '5px'
-                    }}>
-                      ${formatPrice(getPrecio(planId, duration))} / {duration === 90 ? "3 meses" : `${duration} días`}
-                    </div>
-                    <button
-                      className="vv-btn vv-plan-btn"
-                      disabled={loading || !userId}
-                      onClick={() => handleActivate(planId)}
-                      data-testid={`btn-activar-${planId}`}
-                    >
-                      {!userId
-                        ? "Inicia sesion"
-                        : currentPlan === planId && planEstado === "vencido"
-                          ? "Renovar"
-                          : "Activar plan"}
+                    <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#c6a75e', textAlign: 'center', marginBottom: '5px' }}>${formatPrice(getPrecio(planId, duration))} / {duration === 90 ? "3 meses" : `${duration} días`}</div>
+                    <button className="vv-btn vv-plan-btn" disabled={loading || !userId} onClick={() => handleActivate(planId)} data-testid={`btn-activar-${planId}`}>
+                      {!userId ? "Inicia sesion" : currentPlan === planId && planEstado === "vencido" ? "Renovar" : "Activar plan"}
                     </button>
                   </div>
                 )}
@@ -498,432 +261,55 @@ export default function PlanesPage() {
           })}
         </div>
       </div>
-
       {showModal && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.8)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 9999,
-            padding: 16,
-          }}
-          onClick={() => {
-            if (!processingPago) setShowModal(false);
-          }}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              background: "#141414",
-              border: "1px solid rgba(198,167,94,0.25)",
-              borderRadius: 16,
-              maxWidth: 440,
-              width: "100%",
-              padding: "28px 24px",
-              position: "relative",
-              maxHeight: "90vh",
-              overflowY: "auto",
-            }}
-          >
-            <button
-              onClick={() => setShowModal(false)}
-              disabled={processingPago}
-              style={{
-                position: "absolute",
-                top: 14,
-                right: 14,
-                background: "none",
-                border: "none",
-                color: "rgba(255,255,255,0.4)",
-                fontSize: 20,
-                cursor: "pointer",
-                lineHeight: 1,
-              }}
-              data-testid="btn-close-modal"
-            >
-              x
-            </button>
-
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999, padding: 16 }} onClick={() => { if (!processingPago) setShowModal(false); }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ background: "#141414", border: "1px solid rgba(198,167,94,0.25)", borderRadius: 16, maxWidth: 440, width: "100%", padding: "28px 24px", position: "relative", maxHeight: "90vh", overflowY: "auto" }}>
+            <button onClick={() => setShowModal(false)} disabled={processingPago} style={{ position: "absolute", top: 14, right: 14, background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 20, cursor: "pointer", lineHeight: 1 }} data-testid="btn-close-modal">x</button>
             {modalStep === "metodo" && (
               <>
-                <h2
-                  style={{
-                    fontSize: 18,
-                    fontWeight: 700,
-                    color: "#f2f2f2",
-                    marginBottom: 4,
-                  }}
-                >
-                  Formas de pago
-                </h2>
-                <p
-                  style={{
-                    fontSize: 13,
-                    color: "rgba(255,255,255,0.5)",
-                    marginBottom: 20,
-                  }}
-                >
-                  Plan {selectedPlan ? PLANS[selectedPlan]?.name : ""} -{" "}
-                  {duration === 90 ? "3 meses" : `${duration} dias`} - $
-                  {formatPrice(selectedPlanPrice)} UYU
-                </p>
-
-                {pagoError && (
-                  <div
-                    style={{
-                      padding: "10px 14px",
-                      borderRadius: 8,
-                      background: "rgba(255,80,80,0.08)",
-                      border: "1px solid rgba(255,80,80,0.2)",
-                      color: "#ff6b6b",
-                      fontSize: 13,
-                      marginBottom: 16,
-                    }}
-                  >
-                    {pagoError}
-                  </div>
-                )}
-
-                {!userId ? (
-                  <div style={{ textAlign: "center", padding: "24px 0" }}>
-                    <p
-                      style={{
-                        color: "rgba(255,255,255,0.6)",
-                        fontSize: 14,
-                        marginBottom: 16,
-                      }}
-                    >
-                      Necesitas iniciar sesion para realizar el pago.
-                    </p>
-                    <a
-                      href="/login?returnTo=/planes"
-                      data-testid="link-login-modal"
-                      style={{
-                        display: "inline-block",
-                        padding: "12px 28px",
-                        borderRadius: 10,
-                        background:
-                          "linear-gradient(90deg, #b68a2a, #f3d77d, #b68a2a)",
-                        color: "#131313",
-                        fontSize: 14,
-                        fontWeight: 700,
-                        textDecoration: "none",
-                      }}
-                    >
-                      Iniciar sesion
-                    </a>
-                  </div>
-                ) : (
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: 10,
-                    }}
-                  >
-                    {METODOS.map((m) => (
-                      <button
-                        key={m.id}
-                        onClick={() => handleSelectMetodo(m.id)}
-                        disabled={processingPago}
-                        data-testid={`btn-metodo-${m.id}`}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 14,
-                          padding: "14px 18px",
-                          borderRadius: 10,
-                          border: "1px solid rgba(255,255,255,0.08)",
-                          background: "rgba(255,255,255,0.03)",
-                          color: "#f2f2f2",
-                          cursor: "pointer",
-                          fontSize: 15,
-                          fontWeight: 600,
-                          fontFamily: "inherit",
-                          transition: "border-color 0.15s, background 0.15s",
-                          opacity: processingPago ? 0.5 : 1,
-                          textAlign: "left",
-                        }}
-                        onMouseEnter={(e) => {
-                          if (!processingPago) {
-                            e.currentTarget.style.borderColor =
-                              "rgba(198,167,94,0.4)";
-                            e.currentTarget.style.background =
-                              "rgba(198,167,94,0.06)";
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.borderColor =
-                            "rgba(255,255,255,0.08)";
-                          e.currentTarget.style.background =
-                            "rgba(255,255,255,0.03)";
-                        }}
-                      >
-                        <span
-                          style={{
-                            width: 38,
-                            height: 38,
-                            borderRadius: 10,
-                            background: "rgba(198,167,94,0.1)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            color: "#c6a75e",
-                            fontSize: 16,
-                            flexShrink: 0,
-                          }}
-                        >
-                          {m.id === "mercadopago" ? (
-                            <svg
-                              width="18"
-                              height="18"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <rect
-                                x="1"
-                                y="4"
-                                width="22"
-                                height="16"
-                                rx="2"
-                                ry="2"
-                              />
-                              <line x1="1" y1="10" x2="23" y2="10" />
-                            </svg>
-                          ) : m.id === "transferencia" ? (
-                            <svg
-                              width="18"
-                              height="18"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <line x1="12" y1="1" x2="12" y2="23" />
-                              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-                            </svg>
-                          ) : (
-                            <svg
-                              width="18"
-                              height="18"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                              <polyline points="9 22 9 12 15 12 15 22" />
-                            </svg>
-                          )}
-                        </span>
-                        {m.label}
-                      </button>
-                    ))}
-                  </div>
-                )}
+                <h2 style={{ fontSize: 18, fontWeight: 700, color: "#f2f2f2", marginBottom: 4 }}>Formas de pago</h2>
+                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", marginBottom: 20 }}>Plan {selectedPlan ? PLANS[selectedPlan]?.name : ""} - {duration === 90 ? "3 meses" : `${duration} dias`} - ${formatPrice(selectedPlanPrice)} UYU</p>
+                {pagoError && <div style={{ padding: "10px 14px", borderRadius: 8, background: "rgba(255,80,80,0.08)", border: "1px solid rgba(255,80,80,0.2)", color: "#ff6b6b", fontSize: 13, marginBottom: 16 }}>{pagoError}</div>}
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {METODOS.map((m) => (
+                    <button key={m.id} onClick={() => handleSelectMetodo(m.id)} disabled={processingPago} data-testid={`btn-metodo-${m.id}`} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.03)", color: "#f2f2f2", cursor: "pointer", fontSize: 15, fontWeight: 600, fontFamily: "inherit", opacity: processingPago ? 0.5 : 1, textAlign: "left" }}>
+                      <span style={{ width: 38, height: 38, borderRadius: 10, background: "rgba(198,167,94,0.1)", display: "flex", alignItems: "center", justifyContent: "center", color: "#c6a75e", fontSize: 16, flexShrink: 0 }}>
+                        {m.id === "mercadopago" ? "MP" : m.id === "abitab" ? "A" : m.id === "redpagos" ? "R" : "T"}
+                      </span>
+                      {m.label}
+                    </button>
+                  ))}
+                </div>
               </>
             )}
-
-            {modalStep === "procesando" && (
-              <div style={{ textAlign: "center", padding: "40px 0" }}>
-                <div
-                  style={{
-                    width: 36,
-                    height: 36,
-                    border: "3px solid rgba(198,167,94,0.2)",
-                    borderTop: "3px solid #c6a75e",
-                    borderRadius: "50%",
-                    animation: "spin 0.8s linear infinite",
-                    margin: "0 auto 16px",
-                  }}
-                />
-                <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 14 }}>
-                  Redirigiendo a MercadoPago...
-                </p>
-                <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+            {modalStep === "instrucciones" && selectedMetodo && (
+              <div style={{ textAlign: "center" }}>
+                <h2 style={{ fontSize: 18, fontWeight: 700, color: "#f2f2f2", marginBottom: 16 }}>{INSTRUCCIONES[selectedMetodo]?.titulo}</h2>
+                <div style={{ textAlign: "left", background: "rgba(255,255,255,0.03)", borderRadius: 12, padding: "16px 20px", marginBottom: 20 }}>
+                  {INSTRUCCIONES[selectedMetodo]?.pasos.map((p, i) => ( <div key={i} style={{ display: "flex", gap: 12, fontSize: 14, color: "rgba(255,255,255,0.7)", marginBottom: 10 }}><span style={{ color: "#c6a75e", fontWeight: 700 }}>{i + 1}.</span>{p}</div> ))}
+                </div>
+                {!comprobanteUploaded ? (
+                  <>
+                    <input type="file" ref={fileInputRef} onChange={handleUploadComprobante} style={{ display: "none" }} accept="image/*" />
+                    <button onClick={() => fileInputRef.current?.click()} disabled={uploadingComprobante} style={{ padding: "12px 18px", borderRadius: 10, border: "none", background: "linear-gradient(90deg, #b68a2a, #f3d77d, #b68a2a)", color: "#131313", fontSize: 14, fontWeight: 700, cursor: "pointer", opacity: uploadingComprobante ? 0.5 : 1 }}>{uploadingComprobante ? "Subiendo..." : "Subir comprobante"}</button>
+                  </>
+                ) : (
+                  <div style={{ color: "#22c55e", fontWeight: 700, fontSize: 14 }}>Comprobante enviado. Se activará tras revisión.</div>
+                )}
+                <button onClick={() => setShowModal(false)} style={{ width: "100%", marginTop: 10, padding: "10px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.08)", background: "transparent", color: "rgba(255,255,255,0.5)", fontSize: 13, cursor: "pointer" }}>Cerrar</button>
               </div>
             )}
-
-            {modalStep === "instrucciones" &&
-              selectedMetodo &&
-              INSTRUCCIONES[selectedMetodo] && (
-                <>
-                  <h2
-                    style={{
-                      fontSize: 18,
-                      fontWeight: 700,
-                      color: "#f2f2f2",
-                      marginBottom: 4,
-                    }}
-                  >
-                    {INSTRUCCIONES[selectedMetodo].titulo}
-                  </h2>
-                  <p
-                    style={{
-                      fontSize: 13,
-                      color: "rgba(255,255,255,0.5)",
-                      marginBottom: 20,
-                    }}
-                  >
-                    Plan {selectedPlan ? PLANS[selectedPlan]?.name : ""} -{" "}
-                    {duration === 90 ? "3 meses" : `${duration} dias`}
-                  </p>
-
-                  <div
-                    style={{
-                      background: "rgba(198,167,94,0.06)",
-                      border: "1px solid rgba(198,167,94,0.15)",
-                      borderRadius: 10,
-                      padding: "16px 18px",
-                      marginBottom: 18,
-                    }}
-                  >
-                    <div
-                      style={{
-                        fontSize: 24,
-                        fontWeight: 800,
-                        color: "#c6a75e",
-                        marginBottom: 8,
-                      }}
-                    >
-                      ${formatPrice(selectedPlanPrice)} UYU
-                    </div>
-                    <ol
-                      style={{
-                        margin: 0,
-                        paddingLeft: 18,
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: 8,
-                      }}
-                    >
-                      {INSTRUCCIONES[selectedMetodo].pasos.map((p, i) => (
-                        <li
-                          key={i}
-                          style={{
-                            fontSize: 13,
-                            color: "rgba(255,255,255,0.7)",
-                            lineHeight: 1.5,
-                          }}
-                        >
-                          {p}
-                        </li>
-                      ))}
-                    </ol>
-                  </div>
-
-                  {pagoError && (
-                    <div
-                      style={{
-                        padding: "10px 14px",
-                        borderRadius: 8,
-                        background: "rgba(255,80,80,0.08)",
-                        border: "1px solid rgba(255,80,80,0.2)",
-                        color: "#ff6b6b",
-                        fontSize: 13,
-                        marginBottom: 14,
-                      }}
-                    >
-                      {pagoError}
-                    </div>
-                  )}
-
-                  {comprobanteUploaded ? (
-                    <div
-                      style={{
-                        padding: "14px 18px",
-                        borderRadius: 10,
-                        background: "rgba(80,200,120,0.08)",
-                        border: "1px solid rgba(80,200,120,0.2)",
-                        color: "rgba(80,200,120,0.92)",
-                        fontSize: 14,
-                        textAlign: "center",
-                        marginBottom: 14,
-                      }}
-                      data-testid="text-comprobante-ok"
-                    >
-                      Comprobante enviado. Tu pago sera revisado y acreditado
-                      por nuestro equipo.
-                    </div>
-                  ) : (
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: 10,
-                      }}
-                    >
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/*"
-                        style={{ display: "none" }}
-                        onChange={() => {
-                          if (fileInputRef.current?.files?.[0])
-                            handleUploadComprobante();
-                        }}
-                        data-testid="input-comprobante"
-                      />
-                      <button
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={uploadingComprobante}
-                        data-testid="btn-subir-comprobante"
-                        style={{
-                          padding: "12px 18px",
-                          borderRadius: 10,
-                          border: "none",
-                          background:
-                            "linear-gradient(90deg, #b68a2a, #f3d77d, #b68a2a)",
-                          color: "#131313",
-                          fontSize: 14,
-                          fontWeight: 700,
-                          cursor: "pointer",
-                          fontFamily: "inherit",
-                          opacity: uploadingComprobante ? 0.5 : 1,
-                        }}
-                      >
-                        {uploadingComprobante
-                          ? "Subiendo..."
-                          : "Subir comprobante"}
-                      </button>
-                    </div>
-                  )}
-
-                  <button
-                    onClick={() => setShowModal(false)}
-                    style={{
-                      width: "100%",
-                      marginTop: 10,
-                      padding: "10px",
-                      borderRadius: 8,
-                      border: "1px solid rgba(255,255,255,0.08)",
-                      background: "transparent",
-                      color: "rgba(255,255,255,0.5)",
-                      fontSize: 13,
-                      cursor: "pointer",
-                      fontFamily: "inherit",
-                    }}
-                    data-testid="btn-cerrar-instrucciones"
-                  >
-                    Cerrar
-                  </button>
-                </>
-              )}
           </div>
         </div>
       )}
     </main>
+  );
+}
+
+export default function PlanesPage() {
+  return (
+    <Suspense fallback={<div style={{ minHeight: "100vh", background: "#0a0a0a", display: "flex", alignItems: "center", justifyContent: "center" }}><div style={{ width: "36px", height: "36px", border: "3px solid rgba(198,167,94,0.2)", borderTop: "3px solid #c6a75e", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} /></div>}>
+      <PlanesContent />
+    </Suspense>
   );
 }
