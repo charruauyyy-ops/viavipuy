@@ -14,7 +14,6 @@ type Step =
   | "capture"
   | "selfie"
   | "done"
-  | "email_not_confirmed"
   | "enter_otp";
 
 const DOC_TYPES = [
@@ -73,16 +72,6 @@ export default function RegistroPage() {
 
       setUserId(user.id);
       setEmail(user.email || "");
-
-      const emailConfirmed = !!(
-        user.email_confirmed_at ||
-        (user as unknown as Record<string, unknown>).confirmed_at
-      );
-
-      if (!emailConfirmed) {
-        setStep("email_not_confirmed");
-        return;
-      }
 
       const { data: profRows } = await supabase
         .from("profiles")
@@ -230,13 +219,10 @@ export default function RegistroPage() {
       setMessage({ type: "error", text: "Supabase no configurado." });
       return;
     }
-
     setLoading(true);
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
     const { data, error } = await supabase.auth.signUp({
       email: email.trim(),
       password,
-      options: { emailRedirectTo: `${siteUrl}/auth/callback` },
     });
     if (error) {
       setMessage({ type: "error", text: error.message });
@@ -339,7 +325,7 @@ export default function RegistroPage() {
       } else {
         setMessage({
           type: "success",
-          text: "Email reenviado. Revisa tu bandeja de entrada.",
+          text: "Codigo reenviado. Revisa tu bandeja de entrada.",
         });
       }
     } catch {
@@ -365,7 +351,7 @@ export default function RegistroPage() {
     const { error } = await supabase.auth.verifyOtp({
       email: email.trim(),
       token: otp.trim(),
-      type: "email",
+      type: "signup",
     });
 
     if (error) {
@@ -410,7 +396,6 @@ export default function RegistroPage() {
         {step !== "signup" &&
           step !== "welcome" &&
           step !== "done" &&
-          step !== "email_not_confirmed" &&
           step !== "enter_otp" && (
             <div className={styles.progress}>
               <div className={styles.progressBar}>
@@ -636,50 +621,6 @@ export default function RegistroPage() {
               data-testid="button-resend-otp"
             >
               {loading ? "Reenviando..." : "Reenviar codigo"}
-            </button>
-          </div>
-        )}
-
-        {step === "email_not_confirmed" && (
-          <div className={styles.welcome}>
-            <div className={styles.welcomeIcon}>
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                style={{ width: 48, height: 48, color: "#f59e0b" }}
-              >
-                <path
-                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </div>
-            <h1 className={styles.formTitle} style={{ textAlign: "center" }}>
-              Confirma tu email
-            </h1>
-            <p className={styles.welcomeText}>
-              Primero necesitas confirmar tu email antes de verificar tu
-              identidad. Revisa tu bandeja de entrada y haz clic en el enlace de
-              confirmacion.
-            </p>
-            <button
-              className={styles.btn}
-              disabled={loading}
-              onClick={handleResendEmail}
-              data-testid="button-resend-email"
-            >
-              {loading ? "Reenviando..." : "Reenviar email de confirmacion"}
-            </button>
-            <button
-              className={`${styles.btn} ${styles.btnSecondary}`}
-              style={{ marginTop: 12 }}
-              onClick={() => router.push("/login")}
-              data-testid="button-go-login"
-            >
-              Ir a Login
             </button>
           </div>
         )}
