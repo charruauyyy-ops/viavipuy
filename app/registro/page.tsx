@@ -13,8 +13,7 @@ type Step =
   | "camera"
   | "capture"
   | "selfie"
-  | "done"
-  | "enter_otp";
+  | "done";
 
 const DOC_TYPES = [
   { value: "cedula", label: "Cedula de Identidad" },
@@ -43,7 +42,6 @@ export default function RegistroPage() {
   const [selfieUploaded, setSelfieUploaded] = useState(false);
   const [captureStep, setCaptureStep] = useState<"frente" | "dorso">("frente");
   const [uploading, setUploading] = useState(false);
-  const [otp, setOtp] = useState("");
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -241,7 +239,7 @@ export default function RegistroPage() {
       setUserId(uid);
     }
     setLoading(false);
-    setStep("enter_otp");
+    setStep("done");
   }
 
   async function handleCameraPermission() {
@@ -319,56 +317,6 @@ export default function RegistroPage() {
     setUploading(false);
   }
 
-  async function handleResendEmail() {
-    const supabase = getSupabase();
-    if (!supabase || !email) return;
-    setLoading(true);
-    setMessage(null);
-    try {
-      const { error } = await supabase.auth.resend({ type: "signup", email });
-      if (error) {
-        setMessage({ type: "error", text: "Error: " + error.message });
-      } else {
-        setMessage({
-          type: "success",
-          text: "Codigo reenviado. Revisa tu bandeja de entrada.",
-        });
-      }
-    } catch {
-      setMessage({ type: "error", text: "No se pudo reenviar el email." });
-    }
-    setLoading(false);
-  }
-
-  async function handleVerifyOtp() {
-    const supabase = getSupabase();
-    if (!supabase) {
-      setMessage({ type: "error", text: "Supabase no configurado." });
-      return;
-    }
-    if (!email.trim() || !otp.trim()) {
-      setMessage({ type: "error", text: "Ingresa el codigo recibido por email." });
-      return;
-    }
-
-    setLoading(true);
-    setMessage(null);
-
-    const { error } = await supabase.auth.verifyOtp({
-      email: email.trim(),
-      token: otp.trim(),
-      type: "signup",
-    });
-
-    if (error) {
-      setMessage({ type: "error", text: error.message });
-      setLoading(false);
-      return;
-    }
-
-    setLoading(false);
-    router.push("/mi-cuenta");
-  }
 
   useEffect(() => {
     if (step === "selfie" && !cameraStream) {
@@ -401,8 +349,7 @@ export default function RegistroPage() {
       <div className={styles.formContainer}>
         {step !== "signup" &&
           step !== "welcome" &&
-          step !== "done" &&
-          step !== "enter_otp" && (
+          step !== "done" && (
             <div className={styles.progress}>
               <div className={styles.progressBar}>
                 <div
@@ -573,63 +520,6 @@ export default function RegistroPage() {
           </>
         )}
 
-        {step === "enter_otp" && (
-          <div className={styles.welcome}>
-            <div className={styles.welcomeIcon}>
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                style={{ width: 48, height: 48, color: "#22c55e" }}
-              >
-                <path
-                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </div>
-            <h1 className={styles.formTitle} style={{ textAlign: "center" }}>
-              Ingresa el codigo
-            </h1>
-            <p className={styles.welcomeText}>
-              Te enviamos un codigo de confirmacion a <strong>{email}</strong>.
-              Ingresalo abajo para activar tu cuenta.
-            </p>
-            <div className={styles.field} style={{ marginTop: 16 }}>
-              <label htmlFor="otp" className={styles.label}>
-                Codigo
-              </label>
-              <input
-                id="otp"
-                type="text"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\s+/g, ""))}
-                className={styles.input}
-                placeholder="Codigo de confirmacion"
-                data-testid="input-otp"
-              />
-            </div>
-            <button
-              className={styles.btn}
-              disabled={loading}
-              onClick={handleVerifyOtp}
-              data-testid="button-verify-otp"
-            >
-              {loading ? "Verificando..." : "Verificar codigo"}
-            </button>
-            <button
-              className={`${styles.btn} ${styles.btnSecondary}`}
-              style={{ marginTop: 12 }}
-              disabled={loading}
-              onClick={handleResendEmail}
-              data-testid="button-resend-otp"
-            >
-              {loading ? "Reenviando..." : "Reenviar codigo"}
-            </button>
-          </div>
-        )}
 
         {step === "welcome" && (
           <div className={styles.welcome}>
