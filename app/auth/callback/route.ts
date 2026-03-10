@@ -6,7 +6,10 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get("code");
   const next = searchParams.get("next") || "/mi-cuenta";
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || request.nextUrl.origin;
+  const siteUrl =
+    process.env.APP_URL ||
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    "https://viavipuy.com";
 
   if (code) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
