@@ -223,6 +223,12 @@ export default function RegistroPage() {
     const { data, error } = await supabase.auth.signUp({
       email: email.trim(),
       password,
+      options: {
+        data: {
+          rol: "escort",
+          categoria,
+        },
+      },
     });
     if (error) {
       setMessage({ type: "error", text: error.message });
