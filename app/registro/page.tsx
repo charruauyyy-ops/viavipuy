@@ -245,15 +245,6 @@ export default function RegistroPage() {
     const uid = data.user?.id;
     if (uid) {
       setUserId(uid);
-      await supabase.from("profiles").upsert(
-        {
-          id: uid,
-          email: email.trim(),
-          verification_status: "pending",
-          categoria,
-        },
-        { onConflict: "id" },
-      );
     }
     setLoading(false);
     setStep("done");
@@ -340,17 +331,7 @@ export default function RegistroPage() {
     setLoading(true);
     setMessage(null);
     try {
-      const siteUrl =
-        process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
-
-      const { error } = await supabase.auth.resend({
-        type: "signup",
-        email,
-        options: {
-          emailRedirectTo: `${siteUrl}/auth/callback`,
-        },
-      });
-
+      const { error } = await supabase.auth.resend({ type: "signup", email });
       if (error) {
         setMessage({ type: "error", text: "Error: " + error.message });
       } else {
