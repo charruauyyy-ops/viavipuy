@@ -340,7 +340,17 @@ export default function RegistroPage() {
     setLoading(true);
     setMessage(null);
     try {
-      const { error } = await supabase.auth.resend({ type: "signup", email });
+      const siteUrl =
+        process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
+
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email,
+        options: {
+          emailRedirectTo: `${siteUrl}/auth/callback`,
+        },
+      });
+
       if (error) {
         setMessage({ type: "error", text: "Error: " + error.message });
       } else {
