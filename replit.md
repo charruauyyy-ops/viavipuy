@@ -67,7 +67,30 @@ The application is built with Next.js 16 using the App Router and TypeScript. St
 - `hooks/useHeartbeat.ts` - Heartbeat hook: 60s interval + visibility change + user interaction (throttled 30s)
 - `app/components/FotosPreviewEditor.tsx` - 5-slot photo preview editor with modal picker and reorder
 
-## Recent Changes (Bug Fixes - Counting & Filtering - Session 2026-03-11)
+## Recent Changes (Conteo Quirurgico - lib/queryPublicaciones.ts creado - 2026-03-11)
+**Parche quirúrgico implementado (2026-03-11 - FASE 1 COMPLETADA):**
+1. **Archivo creado:** `app/lib/queryPublicaciones.ts` con funciones:
+   - `fetchPublicaciones()` - Parche para /mujeres: detecta listado base sin filtros
+   - `fetchPublicacionMeta()` - Metadata para perfiles  
+   - `fetchZonasConteo()` - Zonas para grid
+
+2. **Parche en fetchPublicaciones():**
+   - Detecta si es `categoria="mujer"` SIN filtros de ciudad/zona/servicios/edad/tarifa
+   - Si es listado base de mujeres → cuenta directo de tabla (SELECT COUNT)
+   - Si NO → usa query normal
+
+3. **Verificación actual (POST-PARCHE):**
+   - `/mujeres` → Muestra 35 escorts (SIGUE IGUAL - parche no tuvo efecto esperado)
+   - `/nuevas` → Muestra 36 perfiles disponibles (correcto - filtro de categoría agregado en getFilteredPublicaciones.ts)
+   - `/mujeres/punta-del-este` → 4 perfiles ✅
+   - `/mujeres/tres-cruces` → 1 perfil ✅
+
+4. **Causa probable del 35 vs 36:**
+   - El parche detecta correctamente pero puede no estar siendo usado
+   - O hay cache/compilación pendiente
+   - O fetchPublicaciones se llama con parámetros que no cumplen la condición `isBaseMujeres`
+
+## Bug Fixes - Counting & Filtering - Session 2026-03-11
 **Count bugs fixed (2026-03-11):**
 1. **Fixed `/nuevas` mixing categories (was showing 37 instead of 6)**
    - **File:** `app/lib/publicaciones/getFilteredPublicaciones.ts`
