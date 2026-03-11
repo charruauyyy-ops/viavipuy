@@ -1,47 +1,86 @@
-import type { Metadata } from "next";
-import Link from "next/link";
+import CategoryTabs from "@/app/components/CategoryTabs";
+import TrustBlock from "@/app/components/TrustBlock";
+import HeroSeo from "@/app/components/HeroSeo";
+import DestacadasDiamante from "@/app/components/DestacadasDiamante";
+import ListadoFiltered from "@/app/components/ListadoFiltered";
+import MiniCategoryTabs from "@/app/components/MiniCategoryTabs";
+import { fetchPublicaciones } from "@/lib/queryPublicaciones";
+import { parseSearchParams, hasActiveFilters } from "@/lib/filters";
+import { getSupabasePublicClient } from "@/lib/supabasePublic";
 
-export const metadata: Metadata = {
-  title: "Escorts en Montevideo VIP | Perfiles Verificados | VIAVIP",
+export const metadata = {
+  title: "Montevideo - VIAVIP",
   description:
-    "Descubrí escorts en Montevideo con perfiles verificados, contacto directo y enfoque premium. Ingresá a VIAVIP y explorá acompañantes VIP en Montevideo.",
+    "Encuentra acompañantes premium en Montevideo. Perfiles verificados en la capital.",
 };
 
-export default function EscortsMontevideoSeoPage() {
+export default async function MVDPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const params = await searchParams;
+  const filtros = parseSearchParams(params);
+  const cat = (params.cat as "mujer" | "hombre" | "trans") || "mujer";
+
+  const { items, count, error } = await fetchPublicaciones(cat, filtros, { departamento: "Montevideo" });
+
+  let serviciosOptions: string[] = [];
+  try {
+    const supabase = getSupabasePublicClient();
+    if (supabase) {
+      const { data } = await supabase
+        .from("publicaciones")
+        .select("servicios")
+        .eq("estado_publicacion", "activo")
+        .eq("categoria", cat)
+        .eq("departamento", "Montevideo")
+        .not("servicios", "is", null);
+      if (data) {
+        const set = new Set<string>();
+        data.forEach((row: any) => {
+          if (row.servicios) row.servicios.forEach((s: string) => set.add(s));
+        });
+        serviciosOptions = Array.from(set).sort();
+      }
+    }
+  } catch {}
+
+  if (error) {
+    console.error("Error cargando Montevideo:", error);
+  }
+
   return (
-    <main style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 16px" }}>
-      <h1 style={{ fontSize: "clamp(32px,5vw,52px)", marginBottom: 16 }}>
-        Escorts VIP en Montevideo
-      </h1>
-
-      <p style={{ fontSize: 18, lineHeight: 1.6, color: "#cfcfcf" }}>
-        En VIAVIP encontrás escorts en Montevideo con perfiles verificados,
-        contacto directo y una experiencia premium pensada para quienes buscan
-        discreción, confianza y atención de nivel.
-      </p>
-
-      <p style={{ fontSize: 16, lineHeight: 1.7, color: "#b5b5b5", marginTop: 12 }}>
-        Si estás buscando escorts VIP en Montevideo o acompañantes en Montevideo
-        dentro de una plataforma cuidada, VIAVIP te ofrece una alternativa más
-        ordenada, visual y directa para coordinar rápido y seguro.
-      </p>
-
-      <div style={{ marginTop: 24 }}>
-        <Link
-          href="/mvd"
-          style={{
-            display: "inline-block",
-            padding: "14px 22px",
-            borderRadius: 12,
-            background: "#c6a75e",
-            color: "#000",
-            textDecoration: "none",
-            fontWeight: 700,
-          }}
+    <main>
+      <CategoryTabs />
+      <HeroSeo sectionKey="montevideo" />
+      <TrustBlock />
+      <DestacadasDiamante categoria={cat} zona="mvd" />
+      <div style={{ padding: "20px 16px 0" }}>
+        <h1
+          className="vv-section-title"
+          style={{ fontSize: "24px", margin: 0 }}
         >
-          Ver escorts en Montevideo
-        </Link>
+          Montevideo
+        </h1>
+        <p style={{ color: "#999", fontSize: "14px", marginTop: "4px" }}>
+          {count} perfiles disponibles
+        </p>
       </div>
+      <MiniCategoryTabs
+        currentCat={cat}
+        basePath="/mvd"
+        searchParams={params}
+      />
+      <ListadoFiltered
+        items={items}
+        count={count}
+        filtros={filtros}
+        basePath="/mvd"
+        hasFilters={hasActiveFilters(filtros)}
+        serviciosOptions={serviciosOptions}
+        queryContext={{ categoria: cat, extra_dep: "Montevideo" }}
+      />
     </main>
   );
 }
