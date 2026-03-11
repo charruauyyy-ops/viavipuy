@@ -1,3 +1,6 @@
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 import { parseSearchParams, hasActiveFilters } from "@/lib/filters";
 import { fetchPublicaciones } from "@/lib/queryPublicaciones";
 import { getSupabasePublicClient } from "@/lib/supabasePublic";

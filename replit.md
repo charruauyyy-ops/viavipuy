@@ -67,6 +67,20 @@ The application is built with Next.js 16 using the App Router and TypeScript. St
 - `hooks/useHeartbeat.ts` - Heartbeat hook: 60s interval + visibility change + user interaction (throttled 30s)
 - `app/components/FotosPreviewEditor.tsx` - 5-slot photo preview editor with modal picker and reorder
 
+## FIX QUIRÚRGICO - DESCARTAR CACHE EN /mujeres (2026-03-11)
+**Cache invalidation configurado:**
+- **Archivo:** `app/(public)/mujeres/page.tsx` (líneas 1-2)
+- **Cambios:**
+  - `export const dynamic = "force-dynamic";`
+  - `export const revalidate = 0;`
+- **Efecto:**
+  - ✅ Cada request a `/mujeres` obtiene datos frescos del servidor
+  - ✅ No caching en ISR (Incremental Static Regeneration)
+  - ✅ `count` siempre viene fresco desde DB
+  - ✅ Infinite scroll recibe datos actualizados
+- **Compilación:** ✅ Ready in 902ms
+- **Impacto:** /mujeres renderiza siempre con datos actuales
+
 ## FIX QUIRÚRGICO - RUTAS DE BARRIOS/ZONAS RESTAURADAS (2026-03-11)
 **Fix implementado - Rutas de zonas ahora funcionan:**
 - **Archivo:** `app/(public)/mujeres/[id]/page.tsx`
