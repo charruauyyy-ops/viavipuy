@@ -67,7 +67,14 @@ The application is built with Next.js 16 using the App Router and TypeScript. St
 - `hooks/useHeartbeat.ts` - Heartbeat hook: 60s interval + visibility change + user interaction (throttled 30s)
 - `app/components/FotosPreviewEditor.tsx` - 5-slot photo preview editor with modal picker and reorder
 
-## Recent Changes (SEO Routes)
+## Recent Changes (SEO Metadata + Routes)
+**Metadata SEO added to main category pages (2026-03-11):**
+- `/` (home) - Title: "Escorts VIP en Uruguay | Perfiles verificados | VIAVIP"
+- `/mujeres` - Title: "Escorts mujeres en Uruguay | Acompañantes VIP verificadas | VIAVIP"
+- `/hombres` - Title: "Escorts hombres en Uruguay | Acompañantes VIP masculinos | VIAVIP"
+- `/trans` - Title: "Escorts trans en Uruguay | Acompañantes trans VIP verificadas | VIAVIP"
+
+**SEO Routes
 **New SEO-optimized public routes created (2026-03-11):**
 
 ### National & Category Routes:

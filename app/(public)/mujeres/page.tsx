@@ -9,6 +9,12 @@ import DestacadasDiamante from "@/app/components/DestacadasDiamante";
 import ListadoFiltered from "@/app/components/ListadoFiltered";
 import ZonasBlock from "@/app/components/ZonasBlock";
 
+export const metadata = {
+  title: "Escorts mujeres en Uruguay | Acompañantes VIP verificadas | VIAVIP",
+  description:
+    "Escorts mujeres verificadas en Uruguay. Perfiles reales, fotos auténticas y contacto directo. Encuentra acompañantes VIP disponibles cerca tuyo.",
+};
+
 export default async function MujeresPage({
   searchParams,
 }: {

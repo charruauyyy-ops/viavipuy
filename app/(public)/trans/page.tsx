@@ -9,6 +9,12 @@ import DestacadasDiamante from "@/app/components/DestacadasDiamante";
 import ListadoFiltered from "@/app/components/ListadoFiltered";
 import ZonasBlock from "@/app/components/ZonasBlock";
 
+export const metadata = {
+  title: "Escorts trans en Uruguay | Acompañantes trans VIP verificadas | VIAVIP",
+  description:
+    "Escorts trans verificadas en Uruguay. Perfiles reales, encuentros discretos y acompañantes trans VIP disponibles ahora.",
+};
+
 export default async function TransPage({
   searchParams,
 }: {

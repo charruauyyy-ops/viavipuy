@@ -9,6 +9,12 @@ import DestacadasDiamante from "@/app/components/DestacadasDiamante";
 import ListadoFiltered from "@/app/components/ListadoFiltered";
 import ZonasBlock from "@/app/components/ZonasBlock";
 
+export const metadata = {
+  title: "Escorts hombres en Uruguay | Acompañantes VIP masculinos | VIAVIP",
+  description:
+    "Escorts hombres en Uruguay con perfiles verificados. Encuentros discretos, acompañantes masculinos VIP y contacto directo seguro.",
+};
+
 export default async function HombresPage({
   searchParams,
 }: {
