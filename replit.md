@@ -69,13 +69,22 @@ The application is built with Next.js 16 using the App Router and TypeScript. St
 
 ## Recent Changes (SEO Routes)
 **New SEO-optimized public routes created (2026-03-11):**
+
+### National & Category Routes:
 - `/escorts-uruguay` - National listing page with optimized metadata. Reutilizes `/mujeres` logic without filters. Title: "Escorts en Uruguay VIP | Perfiles Verificados | VIAVIP"
 - `/escorts-disponibles-ahora` - Available now listings (same as `/disponibles`). Title: "Escorts disponibles ahora en Uruguay | VIAVIP"
 - `/escorts-virtuales` - Virtual services listings (same as `/virtual`). Title: "Escorts virtuales en Uruguay | Encuentros online | VIAVIP"
 - `/escorts-verificadas` - Verified profiles listing. Reutilizes `/mujeres` logic. Title: "Escorts verificadas en Uruguay | Perfiles reales | VIAVIP"
 - `/escorts-nuevas` - New profiles (same as `/nuevas`). Title: "Escorts nuevas en Uruguay | Perfiles recién verificados | VIAVIP"
 
-All new routes use existing page logic with updated metadata only. No changes to components, layouts, or filtering logic. Original routes remain untouched.
+### Montevideo Neighborhood Routes:
+- `/montevideo/pocitos` - Escorts in Pocitos neighborhood. Filters: `departamento: "Montevideo"`, `zona: "Pocitos"`. Title: "Escorts en Pocitos | Montevideo | VIAVIP"
+- `/montevideo/carrasco` - Escorts in Carrasco neighborhood. Filters: `departamento: "Montevideo"`, `zona: "Carrasco"`. Title: "Escorts en Carrasco | Montevideo | VIAVIP"
+- `/montevideo/centro` - Escorts in Centro neighborhood. Filters: `departamento: "Montevideo"`, `zona: "Centro"`. Title: "Escorts en Centro | Montevideo | VIAVIP"
+- `/montevideo/punta-carretas` - Escorts in Punta Carretas neighborhood. Filters: `departamento: "Montevideo"`, `zona: "Punta Carretas"`. Title: "Escorts en Punta Carretas | Montevideo | VIAVIP"
+- `/montevideo/tres-cruces` - Escorts in Tres Cruces neighborhood. Filters: `departamento: "Montevideo"`, `zona: "Tres Cruces"`. Title: "Escorts en Tres Cruces | Montevideo | VIAVIP"
+
+All new routes use existing page logic with updated metadata and filters only. No changes to components, layouts, or core filtering logic. Original routes remain untouched.
 
 ## Previous Changes
 - Added real-time availability system: "Disponible ahora" toggle in mi-cuenta, heartbeat pings only when switch=true, 45-minute activity window
