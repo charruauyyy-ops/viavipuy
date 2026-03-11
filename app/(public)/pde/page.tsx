@@ -9,12 +9,12 @@ import { parseSearchParams, hasActiveFilters } from "@/lib/filters";
 import { getSupabasePublicClient } from "@/lib/supabasePublic";
 
 export const metadata = {
-  title: "Punta del Este - VIAVIP",
+  title: "Escorts en Punta del Este VIP | Perfiles Verificados | VIAVIP",
   description:
-    "Encuentra acompañantes premium en Punta del Este. Perfiles verificados en Maldonado.",
+    "Encuentra escorts en Punta del Este con perfiles verificados. Acompañantes premium en Maldonado.",
 };
 
-export default async function PdEPage({
+export default async function EscortsPuntaDelEstePage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -23,7 +23,6 @@ export default async function PdEPage({
   const filtros = parseSearchParams(params);
   const cat = (params.cat as "mujer" | "hombre" | "trans") || "mujer";
 
-  // ✅ FIX: en tu DB PDE vive como ciudad='Maldonado' y zona='Punta del este'
   const { items, count, error } = await fetchPublicaciones(cat, filtros, {
     ciudad: "Maldonado",
     zona: "Punta del este",
@@ -38,9 +37,7 @@ export default async function PdEPage({
         .select("servicios")
         .eq("estado_publicacion", "activo")
         .eq("categoria", cat)
-        // ✅ FIX: ciudad (no departamento)
         .eq("ciudad", "Maldonado")
-        // ✅ FIX: tolerante a mayúsculas/minúsculas
         .ilike("zona", "%punta del este%")
         .not("servicios", "is", null);
 
@@ -70,7 +67,7 @@ export default async function PdEPage({
           className="vv-section-title"
           style={{ fontSize: "24px", margin: 0 }}
         >
-          Punta del Este
+          Escorts VIP en Punta del Este
         </h1>
         <p style={{ color: "#999", fontSize: "14px", marginTop: "4px" }}>
           {count} perfiles disponibles
@@ -79,7 +76,7 @@ export default async function PdEPage({
 
       <MiniCategoryTabs
         currentCat={cat}
-        basePath="/pde"
+        basePath="/escorts-punta-del-este"
         searchParams={params}
       />
 
@@ -87,7 +84,7 @@ export default async function PdEPage({
         items={items}
         count={count}
         filtros={filtros}
-        basePath="/pde"
+        basePath="/escorts-punta-del-este"
         hasFilters={hasActiveFilters(filtros)}
         serviciosOptions={serviciosOptions}
         queryContext={{
