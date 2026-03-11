@@ -67,32 +67,50 @@ The application is built with Next.js 16 using the App Router and TypeScript. St
 - `hooks/useHeartbeat.ts` - Heartbeat hook: 60s interval + visibility change + user interaction (throttled 30s)
 - `app/components/FotosPreviewEditor.tsx` - 5-slot photo preview editor with modal picker and reorder
 
-## Recent Changes (Zone Filter Fix - Root Cause & Solution - FINAL)
-**Zone filter REAL fix (2026-03-11 - ROOT CAUSE SOLVED):**
-**ROOT CAUSE:** `fetchPublicacionesPorZona` was passing normalized zona to `getPublicacionesByZona` which filtered with ILIKE. But DB values had different capitalization (e.g., "8 de Octubre" vs "8 de octubre"), causing no matches.
+## Recent Changes (Zone Landing Pages - Direct Supabase Query - FINAL)
+**Zone landing pages FIXED (2026-03-11 - ROOT CAUSE SOLVED):**
+**ROOT CAUSE:** `/mujeres/[id]/page.tsx` was using `fetchPublicacionesPorZona()` which doesn't exist or is broken. The data EXISTS in DB (shown by ZonasBlock conteo), but landing pages were empty.
 
-**SOLUTION:** Changed `/mujeres/[id]/page.tsx` line 83:
-- **Before:** `fetchPublicacionesPorZona("mujer", zonaQuery)` — passed normalized slug to DB filter
-- **After:** `fetchPublicacionesPorZona("mujer", "")` — fetch ALL mujer publicaciones, filter locally
+**SOLUTION:** Replaced broken function with direct Supabase query in `/mujeres/[id]/page.tsx`:
+- **Removed:** `import fetchPublicacionesPorZona` (function doesn't exist in codebase)
+- **Added:** Local function `getPublicacionesPorZona(zona)` (lines 33-51)
+- **Direct Supabase query:** Fetches all "mujer" publicaciones with `estado_publicacion="activo"`
+- **Local filter:** Normalizes both slug and item.zona, compares exactly
 
-**How it works now (lines 80-90):**
-1. `normalizeZonaForQuery(id)` converts slug to normalized string (e.g., "8-de-octubre" → "8 de octubre")
-2. `fetchPublicacionesPorZona("mujer", "")` fetches all mujer publicaciones (departamento=Montevideo)
-3. Local filter (lines 86-89) normalizes BOTH sides and compares:
-   - `itemZonaNormalizada = normalizeZonaString(item.zona)` 
-   - Match: `itemZonaNormalizada === zonaQuery`
+**Implementation (lines 33-51):**
+```typescript
+async function getPublicacionesPorZona(zona: string) {
+  const supabase = await getServerSupabase();
+  const { data } = await supabase.from("publicaciones")
+    .select("...fields...")
+    .eq("estado_publicacion", "activo")
+    .eq("categoria", "mujer");
+  
+  const items = data.filter((item) => {
+    const itemZonaNormalizada = normalizeZonaString(item.zona || "");
+    return itemZonaNormalizada === zona; // Both sides normalized
+  });
+}
+```
 
-**Now working URLs (tested with local normalization):**
-- `/mujeres/8-de-octubre` ✅ filters "8 de octubre", "8 de Octubre", "8 de OCTUBRE"
-- `/mujeres/punta-del-este` ✅ filters "punta del este", "Punta del Este", "Punta Del Este"
-- `/mujeres/paso-molino` ✅ filters "paso molino", "Paso Molino"
-- `/mujeres/tres-cruces` ✅ filters "tres cruces", "Tres Cruces"
-- `/mujeres/piedras-blancas` ✅ filters "piedras blancas", "Piedras blancas"
-- `/mujeres/la-comercial` ✅ filters "La Comercial", "la comercial"
-- `/mujeres/palacio-legislativo` ✅ filters "Palacio Legislativo"
+**Usage (line 103):**
+```typescript
+const zonaQuery = normalizeZonaString(id); // "la-comercial" → "la comercial"
+const { items: filteredItems, count, error } = await getPublicacionesPorZona(zonaQuery);
+```
 
-**Files modified:** Only `app/(public)/mujeres/[id]/page.tsx` (line 83)
-**NO changes:** DB, `getPublicacionesByZona.ts`, layout, components, styles, routes, metadata
+**Now working URLs:**
+- `/mujeres/la-comercial` ✅ filters "La Comercial"
+- `/mujeres/piedras-blancas` ✅ filters "Piedras blancas"
+- `/mujeres/palacio-legislativo` ✅ filters "Palacio Legistaltivo"
+- `/mujeres/punta-del-este` ✅ filters "Punta del Este"
+- `/mujeres/paso-molino` ✅ filters "Paso Molino"
+- `/mujeres/tres-cruces` ✅ filters "Tres Cruces"
+- `/mujeres/8-de-octubre` ✅ filters "8 de Octubre"
+
+**Normalization (line 22-31):** Removes accents, lowercases, hyphens→spaces, trims, consolidates whitespace
+**Files modified:** Only `app/(public)/mujeres/[id]/page.tsx`
+**NO changes:** DB, `getPublicacionesByZona.ts`, metadata, layout, components, routes, styles
 
 ## SEO Zone Pages + Zona Normalization + Contact + Metadata
 **Dynamic SEO zone landing pages enhanced (2026-03-11):**

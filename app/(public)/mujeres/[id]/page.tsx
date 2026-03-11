@@ -1,5 +1,6 @@
 import { Metadata } from "next";
-import { fetchPublicacionesPorZona, fetchPublicacionMeta } from "@/lib/queryPublicaciones";
+import { fetchPublicacionMeta } from "@/lib/queryPublicaciones";
+import { getServerSupabase } from "@/lib/supabaseServer";
 import PerfilView from "@/app/components/PerfilView";
 import ListadoGrid from "@/app/components/ListadoGrid";
 import ZonasBlock from "@/app/components/ZonasBlock";
@@ -26,8 +27,29 @@ function normalizeZonaString(str: string): string {
     .replace(/\s+/g, " ");
 }
 
-function normalizeZonaForQuery(slug: string): string {
-  return normalizeZonaString(slug);
+// Función local que trae publicaciones de Supabase y filtra por zona normalizada
+async function getPublicacionesPorZona(zona: string) {
+  const supabase = await getServerSupabase();
+  if (!supabase) return { items: [], count: 0, error: "Error de configuración." };
+
+  try {
+    const { data, error } = await supabase
+      .from("publicaciones")
+      .select("id,nombre,edad,departamento,zona,cover_url,fotos,fotos_preview,video_preview_url,rating,disponible,ultima_actividad,tarifa_hora,altura_cm,servicios,atiende_en,user_id,plan_actual,updated_at")
+      .eq("estado_publicacion", "activo")
+      .eq("categoria", "mujer");
+
+    if (error || !data) return { items: [], count: 0, error: error?.message || "Error cargando perfiles." };
+
+    const items = (data as any[]).filter((item) => {
+      const itemZonaNormalizada = normalizeZonaString(item.zona || "");
+      return itemZonaNormalizada === zona;
+    });
+
+    return { items, count: items.length };
+  } catch (err: unknown) {
+    return { items: [], count: 0, error: err instanceof Error ? err.message : "Error desconocido" };
+  }
 }
 
 export async function generateMetadata({
@@ -75,16 +97,8 @@ export default async function MujeresIdPage({
   }
 
   const zona = slugToName(id);
-  const zonaQuery = normalizeZonaForQuery(id);
-  // Traer TODAS las publicaciones sin filtro de zona, luego filtrar localmente
-  const { items: allItems, count: allCount, error } = await fetchPublicacionesPorZona("mujer", "");
-
-  // Filtrado local con normalización robusta en ambos lados
-  const filteredItems = allItems.filter((item) => {
-    const itemZonaNormalizada = normalizeZonaString(item.zona || "");
-    return itemZonaNormalizada === zonaQuery;
-  });
-  const count = filteredItems.length;
+  const zonaQuery = normalizeZonaString(id);
+  const { items: filteredItems, count, error } = await getPublicacionesPorZona(zonaQuery);
 
   return (
     <main>
