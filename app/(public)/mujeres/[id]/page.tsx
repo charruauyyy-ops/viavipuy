@@ -16,7 +16,13 @@ function slugToName(slug: string): string {
 }
 
 function normalizeZonaForQuery(slug: string): string {
-  return slug.toLowerCase().replace(/-/g, " ");
+  return slug
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/-/g, " ")
+    .trim()
+    .replace(/\s+/g, " ");
 }
 
 export async function generateMetadata({

@@ -67,7 +67,19 @@ The application is built with Next.js 16 using the App Router and TypeScript. St
 - `hooks/useHeartbeat.ts` - Heartbeat hook: 60s interval + visibility change + user interaction (throttled 30s)
 - `app/components/FotosPreviewEditor.tsx` - 5-slot photo preview editor with modal picker and reorder
 
-## Recent Changes (SEO Zone Pages + Zona Normalization + Contact + Metadata)
+## Recent Changes (Zone Filter Fix + SEO Zone Pages + Zona Normalization + Contact)
+**Zone filter normalization fix (2026-03-11):**
+- Fixed `/mujeres/[id]/page.tsx` zone filtering to properly match slug with database values
+- Enhanced `normalizeZonaForQuery()` function (lines 21-29) to:
+  - Remove accents/tildes using NFD normalization
+  - Convert to lowercase
+  - Replace hyphens with spaces
+  - Trim and consolidate whitespace
+- Now correctly filters zones like "La Comercial", "Piedras Blancas", "Punta del Este", "Tres Cruces", etc.
+- UUID profile matching preserved - perfiles still work correctly
+- No route, DB, component, or style changes
+
+## SEO Zone Pages + Zona Normalization + Contact + Metadata
 **Dynamic SEO zone landing pages enhanced (2026-03-11):**
 - Improved `/mujeres/[id]/page.tsx` for zone landing pages (already had this functionality)
 - Added `normalizeZonaForQuery()` function (lines 21-23) to properly convert zone slugs to queries
