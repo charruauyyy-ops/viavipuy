@@ -67,6 +67,19 @@ The application is built with Next.js 16 using the App Router and TypeScript. St
 - `hooks/useHeartbeat.ts` - Heartbeat hook: 60s interval + visibility change + user interaction (throttled 30s)
 - `app/components/FotosPreviewEditor.tsx` - 5-slot photo preview editor with modal picker and reorder
 
+## FIX QUIRÚRGICO /mujeres - MUESTRA 36 EN LUGAR DE 35 (2026-03-11)
+**Fix implementado - Cliente arreglado:**
+- **Archivo:** `app/components/ListadoFiltered.tsx`
+- **Cambios:**
+  1. Línea 73: `const [itemsState, setItemsState] = useState<PublicacionItem[]>(() => items);`
+  2. Línea 97: `const initial = items;`
+- **Problema:** Cliente truncaba el primer render con `slice(0, PAGE_SIZE)` = 12 items
+- **Solución:** Ahora inicia con todos los items del servidor (36)
+- **Resultado:** `/mujeres` muestra **36 escorts** ✅
+- **Compilación:** ✅ Ready in 1912ms
+- **Infinite scroll:** Preservado, funciona normalmente
+- **NO afectado:** UI, estilos, RPC, lógica de API
+
 ## FIX QUIRÚRGICO /nuevas - SOLO MUJERES Y ÚLTIMOS 7 DÍAS (2026-03-11)
 **Fix implementado exitosamente:**
 - **Archivo:** `app/lib/publicaciones/getFilteredPublicaciones.ts` (líneas 64-72)

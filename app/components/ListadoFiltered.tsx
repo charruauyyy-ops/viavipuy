@@ -67,9 +67,7 @@ export default function ListadoFiltered({
 }: ListadoFilteredProps) {
   const [modalOpen, setModalOpen] = useState(false);
 
-  const [itemsState, setItemsState] = useState<PublicacionItem[]>(() =>
-    items.slice(0, PAGE_SIZE),
-  );
+  const [itemsState, setItemsState] = useState<PublicacionItem[]>(() => items);
 
   const [offset, setOffset] = useState(PAGE_SIZE);
   const [loading, setLoading] = useState(false);
@@ -93,7 +91,7 @@ export default function ListadoFiltered({
   const requestSeq = useRef(0);
 
   useEffect(() => {
-    const initial = items.slice(0, PAGE_SIZE);
+    const initial = items;
 
     setItemsState(initial);
     setOffset(initial.length); // 👈 importante: offset real = lo que tenés
