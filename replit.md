@@ -67,7 +67,17 @@ The application is built with Next.js 16 using the App Router and TypeScript. St
 - `hooks/useHeartbeat.ts` - Heartbeat hook: 60s interval + visibility change + user interaction (throttled 30s)
 - `app/components/FotosPreviewEditor.tsx` - 5-slot photo preview editor with modal picker and reorder
 
-## Recent Changes
+## Recent Changes (SEO Routes)
+**New SEO-optimized public routes created (2026-03-11):**
+- `/escorts-uruguay` - National listing page with optimized metadata. Reutilizes `/mujeres` logic without filters. Title: "Escorts en Uruguay VIP | Perfiles Verificados | VIAVIP"
+- `/escorts-disponibles-ahora` - Available now listings (same as `/disponibles`). Title: "Escorts disponibles ahora en Uruguay | VIAVIP"
+- `/escorts-virtuales` - Virtual services listings (same as `/virtual`). Title: "Escorts virtuales en Uruguay | Encuentros online | VIAVIP"
+- `/escorts-verificadas` - Verified profiles listing. Reutilizes `/mujeres` logic. Title: "Escorts verificadas en Uruguay | Perfiles reales | VIAVIP"
+- `/escorts-nuevas` - New profiles (same as `/nuevas`). Title: "Escorts nuevas en Uruguay | Perfiles recién verificados | VIAVIP"
+
+All new routes use existing page logic with updated metadata only. No changes to components, layouts, or filtering logic. Original routes remain untouched.
+
+## Previous Changes
 - Added real-time availability system: "Disponible ahora" toggle in mi-cuenta, heartbeat pings only when switch=true, 45-minute activity window
 - Pure availability functions extracted to lib/disponibilidad.ts (SSR-safe), client DB helpers in lib/pingActividad.ts
 - Heartbeat gated by disponible switch: stops pinging when user turns off availability
