@@ -28,7 +28,8 @@ interface DiamStory {
 
 interface Props {
   categoria?: "mujer" | "hombre" | "trans";
-  zona?: "mvd" | "pde";
+  // CAMBIO: permitir barrios además de mvd/pde
+  zona?: "mvd" | "pde" | string;
 }
 
 export default function DestacadasDiamante({ categoria, zona }: Props = {}) {
@@ -44,7 +45,6 @@ export default function DestacadasDiamante({ categoria, zona }: Props = {}) {
 
       const nowIso = new Date().toISOString();
 
-      // 1) SOLO stories vigentes (expires_at > ahora)
       const { data: raw, error } = await supabase
         .from("diamante_stories")
         .select(
@@ -59,7 +59,6 @@ export default function DestacadasDiamante({ categoria, zona }: Props = {}) {
         return;
       }
 
-      // 2) 1 story por user (la más reciente ya viene primero por el order)
       const seen = new Set<string>();
       const dedup = raw.filter((s: { user_id: string }) => {
         if (seen.has(s.user_id)) return false;
@@ -69,7 +68,6 @@ export default function DestacadasDiamante({ categoria, zona }: Props = {}) {
 
       const userIds = dedup.map((s: { user_id: string }) => s.user_id);
 
-      // 3) Traer info del perfil desde publicaciones (para nombre/zona/avatar)
       let pubQuery = supabase
         .from("publicaciones")
         .select(
@@ -81,13 +79,14 @@ export default function DestacadasDiamante({ categoria, zona }: Props = {}) {
       if (categoria) pubQuery = pubQuery.eq("categoria", categoria);
 
       if (zona === "mvd") {
-        // Montevideo
         pubQuery = pubQuery.eq("departamento", "Montevideo");
       } else if (zona === "pde") {
-        // Punta del Este (dep Maldonado + zona específica)
         pubQuery = pubQuery
           .eq("departamento", "Maldonado")
           .ilike("zona", "%Punta del Este%");
+      } else if (zona) {
+        // NUEVO: soporte barrios (centro, carrasco, pocitos, etc.)
+        pubQuery = pubQuery.ilike("zona", `%${zona}%`);
       }
 
       const { data: pubs } = await pubQuery;
@@ -96,6 +95,7 @@ export default function DestacadasDiamante({ categoria, zona }: Props = {}) {
         string,
         { nombre: string; zona: string; avatar_url?: string }
       > = {};
+
       if (pubs) {
         for (const p of pubs as any[]) {
           pubMap[p.user_id] = {
@@ -106,7 +106,6 @@ export default function DestacadasDiamante({ categoria, zona }: Props = {}) {
         }
       }
 
-      // Si estás filtrando por categoria/zona, eliminamos stories sin publicación activa compatible
       const filtered =
         categoria || zona ? dedup.filter((s: any) => pubMap[s.user_id]) : dedup;
 
