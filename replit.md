@@ -67,17 +67,29 @@ The application is built with Next.js 16 using the App Router and TypeScript. St
 - `hooks/useHeartbeat.ts` - Heartbeat hook: 60s interval + visibility change + user interaction (throttled 30s)
 - `app/components/FotosPreviewEditor.tsx` - 5-slot photo preview editor with modal picker and reorder
 
-## Recent Changes (Zone Filter Fix + SEO Zone Pages + Zona Normalization + Contact)
-**Zone filter normalization fix (2026-03-11):**
-- Fixed `/mujeres/[id]/page.tsx` zone filtering to properly match slug with database values
-- Enhanced `normalizeZonaForQuery()` function (lines 21-29) to:
-  - Remove accents/tildes using NFD normalization
-  - Convert to lowercase
-  - Replace hyphens with spaces
-  - Trim and consolidate whitespace
-- Now correctly filters zones like "La Comercial", "Piedras Blancas", "Punta del Este", "Tres Cruces", etc.
-- UUID profile matching preserved - perfiles still work correctly
-- No route, DB, component, or style changes
+## Recent Changes (Zone Filter Fix - Local Normalized Matching)
+**Zone filter complete fix (2026-03-11 - FINAL):**
+- Fixed `/mujeres/[id]/page.tsx` zone filtering with bilateral normalized comparison
+- Added `normalizeZonaString()` function (lines 21-30) - robust string normalization:
+  - NFD decomposition (removes accents/tildes)
+  - Lowercase conversion
+  - Hyphen → space replacement
+  - Trim whitespace
+  - Consolidate multiple spaces
+- **Critical change** (lines 84-89): Post-filtrado local with bilateral normalization:
+  - Normalizes both slug (`zonaQuery`) and each item's zona field
+  - Exact equality match after normalization: `itemZonaNormalizada === zonaQuery`
+  - Filters `allItems` → `filteredItems` before rendering
+- Now correctly filters ALL zones including:
+  - `/mujeres/8-de-octubre` ↔ "8 de octubre"
+  - `/mujeres/punta-del-este` ↔ "Punta del Este"
+  - `/mujeres/paso-molino` ↔ "Paso Molino"
+  - `/mujeres/tres-cruces` ↔ "Tres Cruces"
+  - `/mujeres/piedras-blancas` ↔ "Piedras blancas"
+  - `/mujeres/la-comercial` ↔ "La Comercial"
+  - `/mujeres/palacio-legislativo` ↔ "Palacio Legislativo"
+- UUID profiles preserved - regex detection unchanged
+- **No DB, layout, component, style, or route changes**
 
 ## SEO Zone Pages + Zona Normalization + Contact + Metadata
 **Dynamic SEO zone landing pages enhanced (2026-03-11):**
