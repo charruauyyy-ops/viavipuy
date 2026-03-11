@@ -67,6 +67,26 @@ The application is built with Next.js 16 using the App Router and TypeScript. St
 - `hooks/useHeartbeat.ts` - Heartbeat hook: 60s interval + visibility change + user interaction (throttled 30s)
 - `app/components/FotosPreviewEditor.tsx` - 5-slot photo preview editor with modal picker and reorder
 
+## Recent Changes (Bug Fixes - Counting & Filtering - Session 2026-03-11)
+**Count bugs fixed (2026-03-11):**
+1. **Fixed `/nuevas` mixing categories (was showing 37 instead of 6)**
+   - **File:** `app/lib/publicaciones/getFilteredPublicaciones.ts`
+   - **Change:** Added `.eq("categoria", "mujer")` at line 66 for type="nuevas"
+   - **Root cause:** Query was missing category filter, returning all 37 active (36 mujer + 1 trans)
+   - **Result:** Now returns only new mujer profiles (created in last X days)
+
+2. **`/mujeres` showing 35 instead of 36 - Not found**
+   - `fetchPublicaciones` function location unknown in rapid search
+   - Likely has hardcoded limit somewhere
+   - Needs deeper investigation in `@/lib/queryPublicaciones` 
+
+**Files modified:** 
+- `app/lib/publicaciones/getFilteredPublicaciones.ts` (line 66)
+
+**Expected results after fix:**
+- `/nuevas` count: 6 (mujeres created within timeframe)
+- `/mujeres` count: Still 35 (needs further investigation)
+
 ## Recent Changes (Zone Landing Pages - Direct Supabase Query - FINAL)
 **Zone landing pages FIXED (2026-03-11 - ROOT CAUSE SOLVED):**
 **ROOT CAUSE:** `/mujeres/[id]/page.tsx` was using `fetchPublicacionesPorZona()` which doesn't exist or is broken. The data EXISTS in DB (shown by ZonasBlock conteo), but landing pages were empty.
