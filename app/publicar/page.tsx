@@ -56,6 +56,22 @@ const DB_CAT_TO_FORM: Record<string, string> = {
   idiomas: "idiomas",
 };
 
+function normalizarZona(input: string) {
+  if (!input) return "";
+
+  let z = input
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, " ");
+
+  if (z === "3 cruces") z = "tres cruces";
+  if (z === "pde") z = "punta del este";
+
+  return z;
+}
+
 interface ServicioRow {
   id: string;
   nombre: string;
@@ -512,11 +528,13 @@ export default function PublicarPage() {
 
     setSaving(true);
 
+    const zonaNormalizada = normalizarZona(form1.zona);
+
     const payload: Record<string, unknown> = {
       nombre: form1.nombre.trim(),
       descripcion: form1.descripcion.trim() || null,
       departamento: form1.departamento.trim() || null,
-      zona: form1.zona.trim() || null,
+      zona: zonaNormalizada || null,
       ciudad: form1.departamento.trim() || null,
       cover_url: form1.cover_url.trim() || null,
       disponible: !!form1.disponible,

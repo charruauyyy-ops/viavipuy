@@ -67,7 +67,15 @@ The application is built with Next.js 16 using the App Router and TypeScript. St
 - `hooks/useHeartbeat.ts` - Heartbeat hook: 60s interval + visibility change + user interaction (throttled 30s)
 - `app/components/FotosPreviewEditor.tsx` - 5-slot photo preview editor with modal picker and reorder
 
-## Recent Changes (Contact Field Consolidation + SEO)
+## Recent Changes (Zona Normalization + Contact Consolidation + SEO)
+**Zona normalization fix (2026-03-11):**
+- Added `normalizarZona()` function to `/publicar/page.tsx` (lines 62-76)
+- Normalizes zona input before saving to database: removes accents, lowercases, trims spaces, applies aliases
+- Handles "3 cruces" → "tres cruces" and "pde" → "punta del este"
+- Used in handleSubmit() before creating payload (line 534)
+- Fixes broken filters, carousels, and SEO due to zona variations
+
+## Contact Field Consolidation + SEO
 **Contact field cleanup (2026-03-11):**
 - Removed duplicate `telefono` field from `/publicar` page and FormStep1 interface
 - Removed telefono from payload sent to database (publicaciones table no longer receives duplicate contact)
