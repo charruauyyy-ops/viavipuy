@@ -17,8 +17,8 @@ export default async function NuevasPage() {
       <CategoryTabs />
       <HeroSeo sectionKey="nuevas" />
       <TrustBlock />
-      <ZonaListSSR 
-        title="Nuevas" 
+      <ZonaListSSR
+        title="Nuevas"
         subtitle="Los ingresos más recientes a la plataforma."
         emptyTestId="nuevas-empty-state"
         data={items || []}

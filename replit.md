@@ -67,6 +67,17 @@ The application is built with Next.js 16 using the App Router and TypeScript. St
 - `hooks/useHeartbeat.ts` - Heartbeat hook: 60s interval + visibility change + user interaction (throttled 30s)
 - `app/components/FotosPreviewEditor.tsx` - 5-slot photo preview editor with modal picker and reorder
 
+## FIX QUIRÚRGICO /nuevas - SOLO MUJERES Y ÚLTIMOS 7 DÍAS (2026-03-11)
+**Fix implementado exitosamente:**
+- **Archivo:** `app/lib/publicaciones/getFilteredPublicaciones.ts` (líneas 64-72)
+- **Cambio:** Agregó filtros a `/nuevas`:
+  - `.eq("categoria", "mujer")` - Solo mujeres
+  - `.gte("created_at", sevenDaysAgo)` - Últimos 7 días
+  - Calcula `sevenDaysAgo = now - 7 días`
+- **Resultado:** `/nuevas` muestra SOLO escorts mujeres creadas en últimos 7 días
+- **Compilación:** ✅ Ready in 1199ms
+- **NO afectado:** `/mujeres`, rutas por zona, `/pde`, otras páginas, RPC, UI, estilos
+
 ## REVERSIÓN URGENTE COMPLETADA (2026-03-11)
 **Estado: VUELTO AL ESTABLE - listo para próximo fix controlado**
 
