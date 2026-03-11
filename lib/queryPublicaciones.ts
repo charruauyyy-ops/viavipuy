@@ -55,6 +55,55 @@ export async function fetchPublicaciones(
 
     const atiendeEn = filtros.atiende_en.length === 1 ? filtros.atiende_en[0] : null;
 
+    // When no pagination (e.g., /mujeres initial load), use direct query to get ALL items
+    // When pagination exists (e.g., "Load More"), use RPC with limit/offset
+    if (!pagination) {
+      let query = supabase
+        .from("publicaciones")
+        .select("id,nombre,edad,departamento,zona,cover_url,fotos,fotos_preview,video_preview_url,rating,disponible,ultima_actividad,tarifa_hora,altura_cm,servicios,atiende_en,user_id,plan_actual,plan_weight,updated_at,categoria,precio,mostrar_precio")
+        .eq("estado_publicacion", "activo")
+        .eq("categoria", categoria);
+
+      if (departamento) query = query.eq("departamento", departamento);
+      if (ciudad) query = query.eq("ciudad", ciudad);
+      if (zona) query = query.eq("zona", zona);
+      if (minEdad !== null) query = query.gte("edad", minEdad);
+      if (maxEdad !== null) query = query.lte("edad", maxEdad);
+      if (minTarifa !== null) query = query.gte("tarifa_hora", minTarifa);
+      if (maxTarifa !== null) query = query.lte("tarifa_hora", maxTarifa);
+      if (servicios.length > 0) query = query.contains("servicios", servicios);
+      if (atiendeEn) query = query.contains("atiende_en", [atiendeEn]);
+
+      const { data: allRows, error: dirError } = await query;
+
+      if (dirError) {
+        return { items: [], count: 0, total: 0, hasMore: false, error: dirError.message };
+      }
+
+      let items = (allRows || []) as PublicacionItem[];
+
+      if (filtros.atiende_en.length > 1) {
+        items = items.filter((p) => {
+          const pa = p.atiende_en || [];
+          return filtros.atiende_en.every((a) => pa.includes(a));
+        });
+      }
+
+      const alturaFilterActive =
+        filtros.alt_min !== DEFAULTS.alt_min || filtros.alt_max !== DEFAULTS.alt_max;
+      if (alturaFilterActive) {
+        items = items.filter((p) => {
+          const h = p.altura_cm;
+          if (h == null || h === 0) return false;
+          return h >= filtros.alt_min && h <= filtros.alt_max;
+        });
+      }
+
+      const total = items.length;
+      return { items, count: total, total, hasMore: false };
+    }
+
+    // Paginated request: use RPC with limit/offset
     const rpcParams = {
       _categoria: categoria,
       _departamento: departamento,
