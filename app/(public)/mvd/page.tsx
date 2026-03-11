@@ -9,12 +9,12 @@ import { parseSearchParams, hasActiveFilters } from "@/lib/filters";
 import { getSupabasePublicClient } from "@/lib/supabasePublic";
 
 export const metadata = {
-  title: "Montevideo - VIAVIP",
+  title: "Escorts en Montevideo VIP | Perfiles Verificados | VIAVIP",
   description:
-    "Encuentra acompañantes premium en Montevideo. Perfiles verificados en la capital.",
+    "Encuentra escorts en Montevideo con perfiles verificados. Acompañantes premium en la capital.",
 };
 
-export default async function MVDPage({
+export default async function EscortsMontevideoPage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -61,7 +61,7 @@ export default async function MVDPage({
           className="vv-section-title"
           style={{ fontSize: "24px", margin: 0 }}
         >
-          Montevideo
+          Escorts VIP en Montevideo
         </h1>
         <p style={{ color: "#999", fontSize: "14px", marginTop: "4px" }}>
           {count} perfiles disponibles
@@ -69,14 +69,14 @@ export default async function MVDPage({
       </div>
       <MiniCategoryTabs
         currentCat={cat}
-        basePath="/mvd"
+        basePath="/escorts-montevideo"
         searchParams={params}
       />
       <ListadoFiltered
         items={items}
         count={count}
         filtros={filtros}
-        basePath="/mvd"
+        basePath="/escorts-montevideo"
         hasFilters={hasActiveFilters(filtros)}
         serviciosOptions={serviciosOptions}
         queryContext={{ categoria: cat, extra_dep: "Montevideo" }}
