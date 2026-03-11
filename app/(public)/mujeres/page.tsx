@@ -10,9 +10,9 @@ import ListadoFiltered from "@/app/components/ListadoFiltered";
 import ZonasBlock from "@/app/components/ZonasBlock";
 
 export const metadata = {
-  title: "Escorts mujeres en Uruguay | Acompañantes VIP verificadas | VIAVIP",
+  title: "Escorts mujeres en Uruguay | Perfiles verificados y reales | VIAVIP",
   description:
-    "Escorts mujeres verificadas en Uruguay. Perfiles reales, fotos auténticas y contacto directo. Encuentra acompañantes VIP disponibles cerca tuyo.",
+    "Explorá escorts mujeres verificadas en Uruguay. Fotos reales, disponibilidad inmediata y contacto directo. Montevideo y todo el país.",
 };
 
 export default async function MujeresPage({

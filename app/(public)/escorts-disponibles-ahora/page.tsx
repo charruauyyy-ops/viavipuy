@@ -5,9 +5,9 @@ import ZonaListSSR from "@/app/components/ZonaListSSR";
 import { getFilteredPublicaciones } from "@/app/lib/publicaciones/getFilteredPublicaciones";
 
 export const metadata = {
-  title: "Escorts disponibles ahora en Uruguay | VIAVIP",
+  title: "Escorts disponibles ahora en Uruguay | Encuentros inmediatos | VIAVIP",
   description:
-    "Encuentra escorts disponibles para encuentro inmediato en Uruguay. Perfiles verificados listos ahora.",
+    "Escorts disponibles ahora mismo en Uruguay. Contacto directo por WhatsApp, perfiles verificados y atención inmediata.",
 };
 
 export default async function EscortsDisponiblesAhoraPage() {

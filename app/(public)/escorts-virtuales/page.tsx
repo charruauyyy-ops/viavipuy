@@ -8,9 +8,9 @@ import { parseSearchParams, hasActiveFilters } from "@/lib/filters";
 import { getSupabasePublicClient } from "@/lib/supabasePublic";
 
 export const metadata = {
-  title: "Escorts virtuales en Uruguay | Encuentros online | VIAVIP",
+  title: "Escorts virtuales en Uruguay | Videollamadas y encuentros online | VIAVIP",
   description:
-    "Encuentra escorts que ofrecen servicios virtuales en Uruguay. Experiencias online con perfiles verificados.",
+    "Escorts virtuales disponibles en Uruguay para encuentros online y videollamadas privadas. Perfiles verificados y contacto directo.",
 };
 
 export default async function EscortsVirtualesPage({

@@ -10,9 +10,9 @@ import ListadoFiltered from "@/app/components/ListadoFiltered";
 import ZonasBlock from "@/app/components/ZonasBlock";
 
 export const metadata = {
-  title: "Escorts en Uruguay VIP | Perfiles Verificados | VIAVIP",
+  title: "Escorts en Uruguay | Catálogo nacional de escorts VIP | VIAVIP",
   description:
-    "Encuentra escorts en Uruguay con perfiles verificados. Acompañantes premium en toda la república.",
+    "Directorio nacional de escorts en Uruguay. Perfiles verificados, fotos reales y disponibilidad actualizada.",
 };
 
 export default async function EscortsUruguayPage({
