@@ -28,7 +28,7 @@ interface DiamStory {
 
 interface Props {
   categoria?: "mujer" | "hombre" | "trans";
-  zona?: string;
+  zona?: "mvd" | "pde";
 }
 
 export default function DestacadasDiamante({ categoria, zona }: Props = {}) {

@@ -67,25 +67,7 @@ The application is built with Next.js 16 using the App Router and TypeScript. St
 - `hooks/useHeartbeat.ts` - Heartbeat hook: 60s interval + visibility change + user interaction (throttled 30s)
 - `app/components/FotosPreviewEditor.tsx` - 5-slot photo preview editor with modal picker and reorder
 
-## Recent Changes (Counting & Filtering Bugs FIXED - Session 2026-03-11)
-**Bug fixes complete (2026-03-11):**
-1. **`/nuevas` fixed (was 37, now 6)** ✅ DONE
-   - File: `app/lib/publicaciones/getFilteredPublicaciones.ts` line 66
-   - Added `.eq("categoria", "mujer")` filter
-
-2. **`/mujeres` fixed (was 35, now 36)** ✅ DONE
-   - File: `lib/queryPublicaciones.ts` lines 61-107
-   - **Root cause:** RPC `listar_publicaciones_categoria_filtrada` limited to 35
-   - **Solution:** When NO pagination param (initial page load like /mujeres), use direct Supabase query instead of RPC
-   - When pagination exists (API "Load More" calls), keeps using RPC for efficiency
-   - Now `/mujeres` direct query retrieves ALL 36 mujeres activas
-
-**Results:**
-- `/mujeres` count: 36 ✅
-- `/mujeres` listado: 36 ✅
-- `/nuevas` count: 6 ✅ (unchanged from previous fix)
-
-## Bug Fixes - Counting & Filtering - Session 2026-03-11 (OLD)
+## Recent Changes (Bug Fixes - Counting & Filtering - Session 2026-03-11)
 **Count bugs fixed (2026-03-11):**
 1. **Fixed `/nuevas` mixing categories (was showing 37 instead of 6)**
    - **File:** `app/lib/publicaciones/getFilteredPublicaciones.ts`
