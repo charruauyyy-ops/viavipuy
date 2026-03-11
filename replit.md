@@ -67,7 +67,21 @@ The application is built with Next.js 16 using the App Router and TypeScript. St
 - `hooks/useHeartbeat.ts` - Heartbeat hook: 60s interval + visibility change + user interaction (throttled 30s)
 - `app/components/FotosPreviewEditor.tsx` - 5-slot photo preview editor with modal picker and reorder
 
-## Recent Changes (Zona Normalization + Contact Consolidation + SEO)
+## Recent Changes (SEO Zone Pages + Zona Normalization + Contact + Metadata)
+**Dynamic SEO zone landing pages enhanced (2026-03-11):**
+- Improved `/mujeres/[id]/page.tsx` for zone landing pages (already had this functionality)
+- Added `normalizeZonaForQuery()` function (lines 21-23) to properly convert zone slugs to queries
+- Enhanced metadata for zones: more specific titles and descriptions mentioning "verificados"
+- Improved subtitle: now dynamic, shows count and proper description
+- Examples that now work with improved SEO:
+  - `/mujeres/cordon` → "Escorts en Cordon Uruguay | Perfiles verificados | VIAVIP"
+  - `/mujeres/pocitos` → "Escorts en Pocitos Uruguay | Perfiles verificados | VIAVIP"
+  - `/mujeres/punta-del-este` → "Escorts en Punta Del Este Uruguay | Perfiles verificados | VIAVIP"
+  - `/mujeres/tres-cruces` → "Escorts en Tres Cruces Uruguay | Perfiles verificados | VIAVIP"
+- No route changes needed - reutilizes existing [id] dynamic route
+- SEO-friendly: each zone is automatically indexable with proper metadata
+
+## Zona Normalization + Contact Consolidation + SEO
 **Zona normalization fix (2026-03-11):**
 - Added `normalizarZona()` function to `/publicar/page.tsx` (lines 62-76)
 - Normalizes zona input before saving to database: removes accents, lowercases, trims spaces, applies aliases

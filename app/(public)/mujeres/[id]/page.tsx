@@ -15,6 +15,10 @@ function slugToName(slug: string): string {
     .join(" ");
 }
 
+function normalizeZonaForQuery(slug: string): string {
+  return slug.toLowerCase().replace(/-/g, " ");
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -38,8 +42,8 @@ export async function generateMetadata({
 
   const zona = slugToName(id);
   return {
-    title: `Escorts en ${zona} | VIAVIP`,
-    description: `Escorts en ${zona}. Perfiles disponibles, fotos y contacto directo. VIAVIP Uruguay.`,
+    title: `Escorts en ${zona} Uruguay | Perfiles verificados | VIAVIP`,
+    description: `Escorts verificadas en ${zona}. Perfiles reales, fotos auténticas y contacto directo. VIAVIP Uruguay.`,
     alternates: { canonical: `/mujeres/${id}` },
   };
 }
@@ -60,7 +64,8 @@ export default async function MujeresIdPage({
   }
 
   const zona = slugToName(id);
-  const { items, count, error } = await fetchPublicacionesPorZona("mujer", id);
+  const zonaQuery = normalizeZonaForQuery(id);
+  const { items, count, error } = await fetchPublicacionesPorZona("mujer", zonaQuery);
 
   return (
     <main>
@@ -68,8 +73,7 @@ export default async function MujeresIdPage({
       <div className="vv-zona-header">
         <h1 className="vv-zona-title">Escorts en {zona}</h1>
         <p className="vv-zona-subtitle">
-          Perfiles verificados y actualizados. Elegi tu zona y encontra
-          disponibles.
+          {count > 0 ? `${count} perfiles verificados y disponibles en ${zona}.` : `Escorts verificadas en ${zona}. Perfiles reales y contacto directo.`}
         </p>
       </div>
 
