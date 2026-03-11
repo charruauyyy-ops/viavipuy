@@ -76,9 +76,10 @@ export default async function MujeresIdPage({
 
   const zona = slugToName(id);
   const zonaQuery = normalizeZonaForQuery(id);
-  const { items: allItems, count: allCount, error } = await fetchPublicacionesPorZona("mujer", zonaQuery);
+  // Traer TODAS las publicaciones sin filtro de zona, luego filtrar localmente
+  const { items: allItems, count: allCount, error } = await fetchPublicacionesPorZona("mujer", "");
 
-  // Filtrado local con normalización en ambos lados para asegurar coincidencia
+  // Filtrado local con normalización robusta en ambos lados
   const filteredItems = allItems.filter((item) => {
     const itemZonaNormalizada = normalizeZonaString(item.zona || "");
     return itemZonaNormalizada === zonaQuery;

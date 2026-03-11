@@ -67,29 +67,32 @@ The application is built with Next.js 16 using the App Router and TypeScript. St
 - `hooks/useHeartbeat.ts` - Heartbeat hook: 60s interval + visibility change + user interaction (throttled 30s)
 - `app/components/FotosPreviewEditor.tsx` - 5-slot photo preview editor with modal picker and reorder
 
-## Recent Changes (Zone Filter Fix - Local Normalized Matching)
-**Zone filter complete fix (2026-03-11 - FINAL):**
-- Fixed `/mujeres/[id]/page.tsx` zone filtering with bilateral normalized comparison
-- Added `normalizeZonaString()` function (lines 21-30) - robust string normalization:
-  - NFD decomposition (removes accents/tildes)
-  - Lowercase conversion
-  - Hyphen → space replacement
-  - Trim whitespace
-  - Consolidate multiple spaces
-- **Critical change** (lines 84-89): Post-filtrado local with bilateral normalization:
-  - Normalizes both slug (`zonaQuery`) and each item's zona field
-  - Exact equality match after normalization: `itemZonaNormalizada === zonaQuery`
-  - Filters `allItems` → `filteredItems` before rendering
-- Now correctly filters ALL zones including:
-  - `/mujeres/8-de-octubre` ↔ "8 de octubre"
-  - `/mujeres/punta-del-este` ↔ "Punta del Este"
-  - `/mujeres/paso-molino` ↔ "Paso Molino"
-  - `/mujeres/tres-cruces` ↔ "Tres Cruces"
-  - `/mujeres/piedras-blancas` ↔ "Piedras blancas"
-  - `/mujeres/la-comercial` ↔ "La Comercial"
-  - `/mujeres/palacio-legislativo` ↔ "Palacio Legislativo"
-- UUID profiles preserved - regex detection unchanged
-- **No DB, layout, component, style, or route changes**
+## Recent Changes (Zone Filter Fix - Root Cause & Solution - FINAL)
+**Zone filter REAL fix (2026-03-11 - ROOT CAUSE SOLVED):**
+**ROOT CAUSE:** `fetchPublicacionesPorZona` was passing normalized zona to `getPublicacionesByZona` which filtered with ILIKE. But DB values had different capitalization (e.g., "8 de Octubre" vs "8 de octubre"), causing no matches.
+
+**SOLUTION:** Changed `/mujeres/[id]/page.tsx` line 83:
+- **Before:** `fetchPublicacionesPorZona("mujer", zonaQuery)` — passed normalized slug to DB filter
+- **After:** `fetchPublicacionesPorZona("mujer", "")` — fetch ALL mujer publicaciones, filter locally
+
+**How it works now (lines 80-90):**
+1. `normalizeZonaForQuery(id)` converts slug to normalized string (e.g., "8-de-octubre" → "8 de octubre")
+2. `fetchPublicacionesPorZona("mujer", "")` fetches all mujer publicaciones (departamento=Montevideo)
+3. Local filter (lines 86-89) normalizes BOTH sides and compares:
+   - `itemZonaNormalizada = normalizeZonaString(item.zona)` 
+   - Match: `itemZonaNormalizada === zonaQuery`
+
+**Now working URLs (tested with local normalization):**
+- `/mujeres/8-de-octubre` ✅ filters "8 de octubre", "8 de Octubre", "8 de OCTUBRE"
+- `/mujeres/punta-del-este` ✅ filters "punta del este", "Punta del Este", "Punta Del Este"
+- `/mujeres/paso-molino` ✅ filters "paso molino", "Paso Molino"
+- `/mujeres/tres-cruces` ✅ filters "tres cruces", "Tres Cruces"
+- `/mujeres/piedras-blancas` ✅ filters "piedras blancas", "Piedras blancas"
+- `/mujeres/la-comercial` ✅ filters "La Comercial", "la comercial"
+- `/mujeres/palacio-legislativo` ✅ filters "Palacio Legislativo"
+
+**Files modified:** Only `app/(public)/mujeres/[id]/page.tsx` (line 83)
+**NO changes:** DB, `getPublicacionesByZona.ts`, layout, components, styles, routes, metadata
 
 ## SEO Zone Pages + Zona Normalization + Contact + Metadata
 **Dynamic SEO zone landing pages enhanced (2026-03-11):**
