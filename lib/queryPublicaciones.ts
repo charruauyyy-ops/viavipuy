@@ -36,24 +36,28 @@ export async function fetchPublicaciones(
   if (!supabase) return { items: [], count: 0, total: 0, hasMore: false, error: "Error de configuracion." };
 
   try {
+    // Sin pagination = devolver todos SIN filtros de UI (edad, tarifa, altura)
+    const isFullList = !pagination;
+    
     const departamento = extra?.departamento || filtros.dep || null;
     const ciudad = extra?.ciudad || null;
     const zona = extra?.zona || null;
 
-    const servicios: string[] = [...filtros.servicios];
+    const servicios: string[] = isFullList ? [] : [...filtros.servicios];
     if (extra?.servicio_especifico && !servicios.includes(extra.servicio_especifico)) {
       servicios.push(extra.servicio_especifico);
     }
 
-    const minEdad = filtros.edad_min;
-    const maxEdad = filtros.edad_max;
-    const minTarifa = filtros.tar_min > 0 ? filtros.tar_min : null;
-    const maxTarifa = filtros.tar_max < 100000 ? filtros.tar_max : null;
+    const minEdad = isFullList ? null : filtros.edad_min;
+    const maxEdad = isFullList ? null : filtros.edad_max;
+    const minTarifa = isFullList ? null : (filtros.tar_min > 0 ? filtros.tar_min : null);
+    const maxTarifa = isFullList ? null : (filtros.tar_max < 100000 ? filtros.tar_max : null);
 
-    const limit = pagination?.limit ?? 200;
+    // Sin pagination = devolver todos los registros
+    const limit = pagination?.limit ?? 9999;
     const offset = pagination?.offset ?? 0;
 
-    const atiendeEn = filtros.atiende_en.length === 1 ? filtros.atiende_en[0] : null;
+    const atiendeEn = isFullList ? null : (filtros.atiende_en.length === 1 ? filtros.atiende_en[0] : null);
 
     const rpcParams = {
       _categoria: categoria,
@@ -113,15 +117,15 @@ export async function fetchPublicaciones(
         .map((p: any) => ({ ...p, plan_actual: p.plan_actual || "free" })) as PublicacionItem[];
     }
 
-    if (filtros.atiende_en.length > 1) {
+    if (!isFullList && filtros.atiende_en.length > 1) {
       items = items.filter((p) => {
         const pa = p.atiende_en || [];
         return filtros.atiende_en.every((a) => pa.includes(a));
       });
     }
 
-    const alturaFilterActive =
-      filtros.alt_min !== DEFAULTS.alt_min || filtros.alt_max !== DEFAULTS.alt_max;
+    const alturaFilterActive = !isFullList &&
+      (filtros.alt_min !== DEFAULTS.alt_min || filtros.alt_max !== DEFAULTS.alt_max);
     if (alturaFilterActive) {
       items = items.filter((p) => {
         const h = p.altura_cm;

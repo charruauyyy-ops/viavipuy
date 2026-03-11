@@ -67,6 +67,26 @@ The application is built with Next.js 16 using the App Router and TypeScript. St
 - `hooks/useHeartbeat.ts` - Heartbeat hook: 60s interval + visibility change + user interaction (throttled 30s)
 - `app/components/FotosPreviewEditor.tsx` - 5-slot photo preview editor with modal picker and reorder
 
+## FIX QUIRÚRGICO - fetchPublicaciones DEVUELVE TODOS LOS REGISTROS (2026-03-11)
+**Corrección implementada - /mujeres ahora muestra 36 registros ✅:**
+- **Archivo:** `lib/queryPublicaciones.ts` (múltiples líneas)
+- **Cambios:**
+  1. Línea 43: `const isFullList = !pagination;` - detecta si es lista completa
+  2. Línea 49: `const servicios: string[] = isFullList ? [] : [...filtros.servicios];`
+  3. Línea 54-57: Desactiva edad, tarifa en isFullList
+  4. Línea 60: `const limit = pagination?.limit ?? 9999;` - límite alto sin pagination
+  5. Línea 63: `const atiendeEn = isFullList ? null : (...)`
+  6. Línea 123, 130-131: Desactiva filtros atiende_en y altura en isFullList
+- **Razón:** Cuando se llama sin `pagination`, NO aplicar filtros de UI (edad, tarifa, altura, servicios, atiende_en)
+- **Problema root:** Los filtros por defecto (18-56 edad, 800-10000 tarifa, 140-184 altura) excluían 1 registro
+- **Resultado:**
+  - ✅ `/mujeres` sin paginación → 36 perfiles completos ✅
+  - ✅ Con filtros/paginación → comportamiento normal
+  - ✅ Infinite scroll funciona correctamente
+  - ✅ Búsqueda/filtros en UI siguen funcionando
+- **Compilación:** ✅ Ready in 879ms
+- **NO afectado:** RPC, rutas, componentes, UI
+
 ## FIX QUIRÚRGICO - DESCARTAR CACHE EN /mujeres (2026-03-11)
 **Cache invalidation configurado:**
 - **Archivo:** `app/(public)/mujeres/page.tsx` (líneas 1-2)
