@@ -67,7 +67,16 @@ The application is built with Next.js 16 using the App Router and TypeScript. St
 - `hooks/useHeartbeat.ts` - Heartbeat hook: 60s interval + visibility change + user interaction (throttled 30s)
 - `app/components/FotosPreviewEditor.tsx` - 5-slot photo preview editor with modal picker and reorder
 
-## Recent Changes (SEO Metadata + Routes)
+## Recent Changes (Contact Field Consolidation + SEO)
+**Contact field cleanup (2026-03-11):**
+- Removed duplicate `telefono` field from `/publicar` page and FormStep1 interface
+- Removed telefono from payload sent to database (publicaciones table no longer receives duplicate contact)
+- Contact is now ONLY configured in `/mi-cuenta` via `telefono_whatsapp` and `telegram_username` in profiles table
+- Public profile display PerfilView already uses correct data from profiles table (no changes needed)
+- Added informative message in `/publicar`: "💡 El contacto público se configura desde Mi Cuenta"
+- No database migrations or schema changes required
+
+## SEO Metadata + Routes
 **Metadata SEO added to main category pages (2026-03-11):**
 - `/` (home) - Title: "Escorts VIP en Uruguay | Perfiles verificados | VIAVIP"
 - `/mujeres` - Title: "Escorts mujeres en Uruguay | Acompañantes VIP verificadas | VIAVIP"

@@ -76,7 +76,6 @@ interface FormStep1 {
   horarios: string;
   tarifa_hora: string;
   acepta_usd: boolean;
-  telefono: string;
 }
 
 interface FormStep2 {
@@ -102,7 +101,6 @@ const EMPTY_STEP1: FormStep1 = {
   horarios: "",
   tarifa_hora: "",
   acepta_usd: false,
-  telefono: "",
 };
 
 const EMPTY_STEP2: FormStep2 = {
@@ -416,7 +414,6 @@ export default function PublicarPage() {
           horarios: pub.horarios ?? "",
           tarifa_hora: pub.tarifa_hora != null ? String(pub.tarifa_hora) : "",
           acepta_usd: pub.acepta_usd ?? false,
-          telefono: pub.telefono ?? "",
         });
         setForm2({
           servicios: pub.servicios ?? [],
@@ -526,7 +523,6 @@ export default function PublicarPage() {
       atiende_en: form1.atiende_en.trim() ? [form1.atiende_en.trim()] : [],
       horarios: form1.horarios.trim() || null,
       acepta_usd: !!form1.acepta_usd,
-      telefono: form1.telefono.trim() || null,
       categoria: userCategoria,
       atiende_a: atiendeA,
       servicios: form2.servicios,
@@ -1049,20 +1045,10 @@ export default function PublicarPage() {
               </div>
             </div>
 
-            <div className="vv-field">
-              <label htmlFor="telefono" className="vv-label">
-                Telefono (WhatsApp)
-              </label>
-              <input
-                id="telefono"
-                name="telefono"
-                type="tel"
-                value={form1.telefono}
-                onChange={handleChange1}
-                className="vv-input"
-                placeholder="+598 99 123 456"
-                data-testid="input-telefono"
-              />
+            <div className="vv-field" style={{ paddingBottom: "16px" }}>
+              <p style={{ color: "#999", fontSize: "14px", margin: 0 }}>
+                💡 El contacto público se configura desde <strong>Mi Cuenta</strong>
+              </p>
             </div>
 
             {userId && planLimits && (
