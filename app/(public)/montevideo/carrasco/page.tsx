@@ -56,7 +56,10 @@ export default async function EscortsCarrascoPage({
       <CategoryTabs />
       <HeroSeo sectionKey="montevideo" />
       <TrustBlock />
-      <DestacadasDiamante categoria={cat} zona="carrasco" />
+
+      {/* CAMBIO AQUÍ */}
+      <DestacadasDiamante categoria={cat} />
+
       <div style={{ padding: "20px 16px 0" }}>
         <h1
           className="vv-section-title"
@@ -68,11 +71,13 @@ export default async function EscortsCarrascoPage({
           {count} perfiles disponibles
         </p>
       </div>
+
       <MiniCategoryTabs
         currentCat={cat}
         basePath="/montevideo/carrasco"
         searchParams={params}
       />
+
       <ListadoFiltered
         items={items}
         count={count}
