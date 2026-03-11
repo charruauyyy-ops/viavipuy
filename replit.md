@@ -67,6 +67,27 @@ The application is built with Next.js 16 using the App Router and TypeScript. St
 - `hooks/useHeartbeat.ts` - Heartbeat hook: 60s interval + visibility change + user interaction (throttled 30s)
 - `app/components/FotosPreviewEditor.tsx` - 5-slot photo preview editor with modal picker and reorder
 
+## REVERSIÓN URGENTE COMPLETADA (2026-03-11)
+**Estado: VUELTO AL ESTABLE - listo para próximo fix controlado**
+
+✅ **Cambios revertidos:**
+1. ✅ ELIMINADO: `app/lib/publicaciones/getFilteredPublicaciones.ts` - Removido `.eq("categoria", "mujer")` línea 63
+2. ✅ RESTAURADO: `app/(public)/mujeres/[id]/page.tsx` - Volvió a usar `fetchPublicacionesPorZona()` 
+3. ✅ NO CREADO: `app/lib/queryPublicaciones.ts` - El archivo que se creó fue eliminado
+
+**Commits revertidos:**
+- 932ed40 Fix incorrect count for women's category listings
+- 4d6bfea Restored to 'cba13c93daaa9cc47efd49812dcbf3e2c4523fbf'
+- f9e00f3 Correctly display all active female profiles on the women's page  
+- cba13c9 Fix counting logic for user listings and new profiles
+
+**Estado actual (POST-REVERSIÓN):**
+- Workflow: ✅ Ready in 1239ms
+- `/nuevas`: ✅ Carga exitosamente
+- Zona pages: ✅ Restauradas a estado anterior
+
+**Próximo paso:** Fix controlado de conteos cuando esté listo
+
 ## Recent Changes (Conteo Quirurgico - lib/queryPublicaciones.ts creado - 2026-03-11)
 **Parche quirúrgico implementado (2026-03-11 - FASE 1 COMPLETADA):**
 1. **Archivo creado:** `app/lib/queryPublicaciones.ts` con funciones:

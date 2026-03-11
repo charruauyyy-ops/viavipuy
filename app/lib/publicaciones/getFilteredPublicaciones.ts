@@ -59,12 +59,10 @@ export async function getFilteredPublicaciones(
         .order("ultima_actividad", { ascending: false, nullsFirst: false })
         .order("created_at", { ascending: false, nullsFirst: false });
     } else if (type === "nuevas") {
-      query = query
-        .eq("categoria", "mujer")
-        .order("created_at", {
-          ascending: false,
-          nullsFirst: false,
-        });
+      query = query.order("created_at", {
+        ascending: false,
+        nullsFirst: false,
+      });
     } else if (type === "virtual") {
       query = query
         .contains("servicios", ["Virtual"])
