@@ -67,6 +67,23 @@ The application is built with Next.js 16 using the App Router and TypeScript. St
 - `hooks/useHeartbeat.ts` - Heartbeat hook: 60s interval + visibility change + user interaction (throttled 30s)
 - `app/components/FotosPreviewEditor.tsx` - 5-slot photo preview editor with modal picker and reorder
 
+## FIX QUIRÚRGICO - RUTAS DE BARRIOS/ZONAS RESTAURADAS (2026-03-11)
+**Fix implementado - Rutas de zonas ahora funcionan:**
+- **Archivo:** `app/(public)/mujeres/[id]/page.tsx`
+- **Cambios:**
+  1. Eliminadas funciones locales rotas: `normalizeZonaString()`, `normalizeZonaForQuery()`, `getPublicacionesPorZona()`
+  2. Reemplazadas por llamada correcta: `const { items, count, error } = await fetchPublicacionesPorZona("mujer", id);`
+  3. Usados `items` y `count` directamente en render (eliminado filtrado local incorrecto)
+- **Problema:** Cliente llamaba `fetchPublicacionesPorZona("mujer", "")` con slug vacío + filtrado local incorrecto
+- **Solución:** Ahora pasa el slug real de la URL (`id`) a la función, sin filtrado local
+- **Resultado:**
+  - ✅ `/mujeres/punta-del-este` - Muestra 4 perfiles
+  - ✅ `/mujeres/8-de-octubre` - Muestra perfiles
+  - ✅ Metadata SEO preservado (usando `slugToName()` para H1)
+  - ✅ Perfiles UUID (ej. `/mujeres/uuid-aqui`) no afectados
+- **Compilación:** ✅ Ready in 1037ms
+- **NO afectado:** UI, estilos, RPC, perfiles individuales
+
 ## FIX QUIRÚRGICO /mujeres - MUESTRA 36 EN LUGAR DE 35 (2026-03-11)
 **Fix implementado - Cliente arreglado:**
 - **Archivo:** `app/components/ListadoFiltered.tsx`

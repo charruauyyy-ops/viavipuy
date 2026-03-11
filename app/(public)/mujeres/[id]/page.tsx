@@ -15,21 +15,6 @@ function slugToName(slug: string): string {
     .join(" ");
 }
 
-function normalizeZonaString(str: string): string {
-  if (!str) return "";
-  return str
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/-/g, " ")
-    .trim()
-    .replace(/\s+/g, " ");
-}
-
-function normalizeZonaForQuery(slug: string): string {
-  return normalizeZonaString(slug);
-}
-
 export async function generateMetadata({
   params,
 }: {
@@ -75,16 +60,7 @@ export default async function MujeresIdPage({
   }
 
   const zona = slugToName(id);
-  const zonaQuery = normalizeZonaForQuery(id);
-  // Traer TODAS las publicaciones sin filtro de zona, luego filtrar localmente
-  const { items: allItems, count: allCount, error } = await fetchPublicacionesPorZona("mujer", "");
-
-  // Filtrado local con normalización robusta en ambos lados
-  const filteredItems = allItems.filter((item) => {
-    const itemZonaNormalizada = normalizeZonaString(item.zona || "");
-    return itemZonaNormalizada === zonaQuery;
-  });
-  const count = filteredItems.length;
+  const { items, count, error } = await fetchPublicacionesPorZona("mujer", id);
 
   return (
     <main>
@@ -101,7 +77,7 @@ export default async function MujeresIdPage({
           <p>Error cargando perfiles. Intenta de nuevo.</p>
         </div>
       ) : count > 0 ? (
-        <ListadoGrid items={filteredItems} basePath="/mujeres" />
+        <ListadoGrid items={items} basePath="/mujeres" />
       ) : (
         <div className="vv-zona-empty">
           <p>Actualmente no hay perfiles en esta zona.</p>
