@@ -6564,3 +6564,53 @@ a {
 @keyframes vv-spin {
   to { transform: rotate(360deg); }
 }
+
+/* ===== SEO SECTION - PREMIUM STYLING ===== */
+.vv-seo-section {
+  margin: 72px auto 96px;
+  padding: 0 24px;
+  max-width: 940px;
+  width: 100%;
+}
+
+.vv-seo-section h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 2.2rem;
+  font-weight: 600;
+  color: var(--gold-light);
+  letter-spacing: -0.5px;
+  margin: 0 0 40px;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.vv-seo-section p {
+  font-family: 'Inter', sans-serif;
+  font-size: 1.02rem;
+  line-height: 1.8;
+  color: rgba(255, 255, 255, 0.72);
+  margin: 0 0 24px;
+  text-align: left;
+  font-weight: 400;
+}
+
+.vv-seo-section p:last-child {
+  margin-bottom: 0;
+}
+
+@media (max-width: 768px) {
+  .vv-seo-section {
+    margin: 56px auto 72px;
+    padding: 0 16px;
+  }
+
+  .vv-seo-section h2 {
+    font-size: 1.8rem;
+    margin-bottom: 32px;
+  }
+
+  .vv-seo-section p {
+    font-size: 0.98rem;
+    line-height: 1.75;
+  }
+}
