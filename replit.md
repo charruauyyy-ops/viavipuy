@@ -67,6 +67,19 @@ The application is built with Next.js 16 using the App Router and TypeScript. St
 - `hooks/useHeartbeat.ts` - Heartbeat hook: 60s interval + visibility change + user interaction (throttled 30s)
 - `app/components/FotosPreviewEditor.tsx` - 5-slot photo preview editor with modal picker and reorder
 
+## BLOQUE SEO AGREGADO A /mvd/page.tsx (2026-03-12) ✅
+**SEO section implementado CORRECTAMENTE:**
+- **Archivo ÚNICO modificado:** `app/(public)/mvd/page.tsx` (líneas 88-102)
+  - Bloque SEO: H2 + 4 párrafos indexables
+  - Ubicación: Dentro de `<main>`, después de `ListadoFiltered`, antes del cierre
+  - Clase reusable: `.vv-seo-section` (estilos en globals.css)
+- **NO tocado:**
+  - ✅ Rutas dinámicas `[id]`
+  - ✅ Componentes compartidos
+  - ✅ Header, footer, navbar
+  - ✅ Filtros, búsqueda
+- **Compilación:** ✅ Ready in 992ms
+
 ## FIX QUIRÚRGICO - fetchPublicaciones DEVUELVE TODOS LOS REGISTROS (2026-03-11)
 **Corrección implementada - /mujeres ahora muestra 36 registros ✅:**
 - **Archivo:** `lib/queryPublicaciones.ts` (múltiples líneas)
