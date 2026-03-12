@@ -6567,7 +6567,7 @@ a {
 
 /* ===== SEO SECTION - PREMIUM STYLING ===== */
 .vv-seo-section {
-  margin: 72px auto 96px;
+  margin: 48px auto 64px;
   padding: 0 24px;
   max-width: 940px;
   width: 100%;
@@ -6600,7 +6600,7 @@ a {
 
 @media (max-width: 768px) {
   .vv-seo-section {
-    margin: 56px auto 72px;
+    margin: 40px auto 56px;
     padding: 0 16px;
   }
 
