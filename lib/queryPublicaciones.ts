@@ -37,7 +37,17 @@ export async function fetchPublicaciones(
 
   try {
     // Sin pagination = devolver todos SIN filtros de UI (edad, tarifa, altura)
-    const isFullList = !pagination;
+    const isFullList = !pagination && !(
+      filtros.dep ||
+      filtros.servicios.length ||
+      filtros.atiende_en.length ||
+      filtros.edad_min !== DEFAULTS.edad_min ||
+      filtros.edad_max !== DEFAULTS.edad_max ||
+      filtros.tar_min !== DEFAULTS.tar_min ||
+      filtros.tar_max !== DEFAULTS.tar_max ||
+      filtros.alt_min !== DEFAULTS.alt_min ||
+      filtros.alt_max !== DEFAULTS.alt_max
+    );
     
     const departamento = extra?.departamento || filtros.dep || null;
     const ciudad = extra?.ciudad || null;
