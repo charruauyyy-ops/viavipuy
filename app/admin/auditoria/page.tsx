@@ -65,7 +65,7 @@ const getSum = async (
   column: string,
   filter?: { gte?: string; lt?: string; eq?: [string, any]; tipo?: string }
 ) => {
-  let query: any = supabase.from(table).select(`sum:${column}.sum()`, { head: false });
+  let query: any = supabase.from(table).select(column);
 
   if (filter?.gte) query = query.gte("created_at", filter.gte);
   if (filter?.lt) query = query.lt("expires_at", filter.lt);
@@ -74,7 +74,8 @@ const getSum = async (
 
   const { data, error } = await query;
   if (error) throw error;
-  return data?.[0]?.sum || 0;
+
+  return (data || []).reduce((sum: number, r: any) => sum + (r[column] || 0), 0);
 };
 
         // Helper for unique IPs (distinct is hard in Supabase client, we fetch and set)
