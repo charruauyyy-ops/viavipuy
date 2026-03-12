@@ -72,7 +72,24 @@ export default async function TransPage({
         serviciosOptions={serviciosOptions}
         queryContext={{ categoria: "trans" }}
       />
+
       <ZonasBlock categoria="trans" />
+
+      <section className="vv-seo-section">
+        <h2>Escorts trans en Uruguay</h2>
+        <p>
+          Si estás buscando escorts trans en Uruguay, en VIAVIP podés descubrir perfiles reales y verificados de acompañantes independientes. Nuestra plataforma reúne escorts trans activas en distintas ciudades del país, permitiendo encontrar perfiles nuevos, acompañantes disponibles y opciones cercanas a tu ubicación.
+        </p>
+        <p>
+          En VIAVIP podés explorar escorts trans que atienden en Montevideo, Punta del Este, Maldonado y otras zonas de Uruguay. Cada perfil incluye fotos, información personal y contacto directo para coordinar encuentros de forma rápida, discreta y segura.
+        </p>
+        <p>
+          El objetivo de VIAVIP es ofrecer una experiencia clara y confiable para adultos que buscan escorts trans en Uruguay. Los perfiles son administrados por las propias acompañantes, lo que permite comunicación directa y disponibilidad actualizada.
+        </p>
+        <p>
+          Explorá escorts trans disponibles, descubrí nuevas acompañantes y encontrá perfiles activos en diferentes ciudades del país.
+        </p>
+      </section>
     </main>
   );
 }
