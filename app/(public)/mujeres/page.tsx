@@ -76,6 +76,23 @@ export default async function MujeresPage({
         serviciosOptions={serviciosOptions}
         queryContext={{ categoria: "mujer" }}
       />
+
+      <section className="vv-seo-section">
+        <h2>Escorts mujeres en Uruguay</h2>
+        <p>
+          Si estás buscando escorts mujeres en Uruguay, en VIAVIP podés descubrir perfiles reales y verificados de acompañantes independientes. Nuestra plataforma reúne escorts activas en distintas ciudades del país, permitiendo encontrar perfiles nuevos, acompañantes disponibles y opciones cercanas a tu ubicación.
+        </p>
+        <p>
+          En VIAVIP podés explorar escorts mujeres que atienden en Montevideo, Punta del Este, Maldonado y otras zonas de Uruguay. Cada perfil incluye fotos, información personal y contacto directo para coordinar encuentros de forma rápida, discreta y segura.
+        </p>
+        <p>
+          El objetivo de VIAVIP es ofrecer una experiencia clara y confiable para adultos que buscan escorts mujeres en Uruguay. Los perfiles son administrados por las propias acompañantes, lo que permite comunicación directa y disponibilidad actualizada.
+        </p>
+        <p>
+          Explorá escorts mujeres disponibles, descubrí nuevas acompañantes y encontrá perfiles activos en diferentes ciudades del país.
+        </p>
+      </section>
+
       <ZonasBlock categoria="mujer" />
     </main>
   );
