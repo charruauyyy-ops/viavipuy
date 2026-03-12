@@ -72,7 +72,24 @@ export default async function HombresPage({
         serviciosOptions={serviciosOptions}
         queryContext={{ categoria: "hombre" }}
       />
+
       <ZonasBlock categoria="hombre" />
+
+      <section className="vv-seo-section">
+        <h2>Escorts hombres en Uruguay</h2>
+        <p>
+          Si estás buscando escorts hombres en Uruguay, en VIAVIP podés descubrir perfiles reales y verificados de acompañantes independientes. Nuestra plataforma reúne escorts hombres activos en distintas ciudades del país, permitiendo encontrar perfiles nuevos, acompañantes disponibles y opciones cercanas a tu ubicación.
+        </p>
+        <p>
+          En VIAVIP podés explorar escorts hombres que atienden en Montevideo, Punta del Este, Maldonado y otras zonas de Uruguay. Cada perfil incluye fotos, información personal y contacto directo para coordinar encuentros de forma rápida, discreta y segura.
+        </p>
+        <p>
+          El objetivo de VIAVIP es ofrecer una experiencia clara y confiable para adultos que buscan escorts hombres en Uruguay. Los perfiles son administrados por los propios acompañantes, lo que permite comunicación directa y disponibilidad actualizada.
+        </p>
+        <p>
+          Explorá escorts hombres disponibles, descubrí nuevos acompañantes y encontrá perfiles activos en diferentes ciudades del país.
+        </p>
+      </section>
     </main>
   );
 }
