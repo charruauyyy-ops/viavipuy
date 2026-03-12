@@ -93,6 +93,22 @@ export default async function EscortsPuntaDelEstePage({
           extra_zona: "Punta del este",
         }}
       />
+
+      <section className="vv-seo-section">
+        <h2>Escorts en Punta del Este</h2>
+        <p>
+          Si estás buscando escorts en Punta del Este, en VIAVIP podés descubrir perfiles reales y verificados de acompañantes independientes. Nuestra plataforma reúne escorts que trabajan en diferentes zonas de la ciudad y alrededores, permitiendo encontrar perfiles activos y nuevas escorts disponibles en uno de los destinos más exclusivos de Uruguay.
+        </p>
+        <p>
+          En VIAVIP podés explorar escorts en Punta del Este que atienden en zonas como Península, Playa Brava, Playa Mansa, La Barra, Maldonado y otros puntos cercanos. Cada perfil incluye fotos, información personal y formas de contacto directo para coordinar encuentros de manera rápida y discreta.
+        </p>
+        <p>
+          El objetivo de VIAVIP es ofrecer una experiencia clara y segura para adultos que buscan escorts en Punta del Este. Los perfiles son administrados por las propias acompañantes, lo que permite comunicación directa y disponibilidad actualizada.
+        </p>
+        <p>
+          Explorá escorts disponibles en Punta del Este, descubrí nuevas acompañantes y encontrá perfiles activos en uno de los destinos más exclusivos del país.
+        </p>
+      </section>
     </main>
   );
 }
