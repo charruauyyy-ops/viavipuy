@@ -77,6 +77,8 @@ export default async function MujeresPage({
         queryContext={{ categoria: "mujer" }}
       />
 
+      <ZonasBlock categoria="mujer" />
+
       <section className="vv-seo-section">
         <h2>Escorts mujeres en Uruguay</h2>
         <p>
@@ -92,8 +94,6 @@ export default async function MujeresPage({
           Explorá escorts mujeres disponibles, descubrí nuevas acompañantes y encontrá perfiles activos en diferentes ciudades del país.
         </p>
       </section>
-
-      <ZonasBlock categoria="mujer" />
     </main>
   );
 }
