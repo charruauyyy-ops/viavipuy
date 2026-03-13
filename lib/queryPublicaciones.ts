@@ -37,17 +37,7 @@ export async function fetchPublicaciones(
 
   try {
     // Sin pagination = devolver todos SIN filtros de UI (edad, tarifa, altura)
-    const isFullList = !pagination && !(
-      filtros.dep ||
-      filtros.servicios.length ||
-      filtros.atiende_en.length ||
-      filtros.edad_min !== DEFAULTS.edad_min ||
-      filtros.edad_max !== DEFAULTS.edad_max ||
-      filtros.tar_min !== DEFAULTS.tar_min ||
-      filtros.tar_max !== DEFAULTS.tar_max ||
-      filtros.alt_min !== DEFAULTS.alt_min ||
-      filtros.alt_max !== DEFAULTS.alt_max
-    );
+    const isFullList = !pagination;
     
     const departamento = extra?.departamento || filtros.dep || null;
     const ciudad = extra?.ciudad || null;
@@ -113,7 +103,7 @@ export async function fetchPublicaciones(
     if (rpcIds.length > 0) {
       const { data: fullRows } = await supabase
         .from("publicaciones")
-        .select("id,nombre,edad,departamento,zona,cover_url,fotos,fotos_preview,video_preview_url,rating,disponible,ultima_actividad,tarifa_hora,altura_cm,servicios,atiende_en,user_id,plan_actual,plan_weight,updated_at,categoria,precio,mostrar_precio")
+        .select("id,nombre,edad,departamento,zona,cover_url,fotos,fotos_preview,video_preview_url,rating,rating_promedio,disponible,ultima_actividad,tarifa_hora,altura_cm,servicios,atiende_en,user_id,plan_actual,plan_weight,updated_at,categoria,precio,mostrar_precio")
         .in("id", rpcIds);
 
       const fullMap = new Map<string, any>();
@@ -188,7 +178,7 @@ export async function fetchPublicacionesByZona(
     if (rpcIds.length > 0) {
       const { data: fullRows } = await supabase
         .from("publicaciones")
-        .select("id,nombre,edad,departamento,zona,cover_url,fotos,fotos_preview,video_preview_url,rating,disponible,ultima_actividad,tarifa_hora,altura_cm,servicios,atiende_en,user_id,plan_actual,plan_weight,updated_at,categoria,precio,mostrar_precio")
+        .select("id,nombre,edad,departamento,zona,cover_url,fotos,fotos_preview,video_preview_url,rating,rating_promedio,disponible,ultima_actividad,tarifa_hora,altura_cm,servicios,atiende_en,user_id,plan_actual,plan_weight,updated_at,categoria,precio,mostrar_precio")
         .in("id", rpcIds);
 
       const fullMap = new Map<string, any>();
@@ -296,7 +286,7 @@ export async function fetchPublicacionesPorZona(
     if (rpcIds.length > 0) {
       const { data: fullRows } = await supabase
         .from("publicaciones")
-        .select("id,nombre,edad,departamento,zona,cover_url,fotos,fotos_preview,video_preview_url,rating,disponible,ultima_actividad,tarifa_hora,altura_cm,servicios,atiende_en,user_id,plan_actual,plan_weight,updated_at,categoria,precio,mostrar_precio")
+        .select("id,nombre,edad,departamento,zona,cover_url,fotos,fotos_preview,video_preview_url,rating,rating_promedio,disponible,ultima_actividad,tarifa_hora,altura_cm,servicios,atiende_en,user_id,plan_actual,plan_weight,updated_at,categoria,precio,mostrar_precio")
         .in("id", rpcIds);
 
       const fullMap = new Map<string, any>();
