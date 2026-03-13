@@ -101,20 +101,40 @@ export async function fetchPublicaciones(
 
     let items: PublicacionItem[] = [];
     if (rpcIds.length > 0) {
-      const { data: fullRows } = await supabase
-        .from("publicaciones")
-        .select("id,nombre,edad,departamento,zona,cover_url,fotos,fotos_preview,video_preview_url,rating,disponible,ultima_actividad,tarifa_hora,altura_cm,servicios,atiende_en,user_id,plan_actual,plan_weight,updated_at,categoria,precio,mostrar_precio")
-        .in("id", rpcIds);
+      const [{ data: fullRows }, { data: ratingRows }] = await Promise.all([
+        supabase
+          .from("publicaciones")
+          .select("id,nombre,edad,departamento,zona,cover_url,fotos,fotos_preview,video_preview_url,rating,disponible,ultima_actividad,tarifa_hora,altura_cm,servicios,atiende_en,user_id,plan_actual,plan_weight,updated_at,categoria,precio,mostrar_precio")
+          .in("id", rpcIds),
+        supabase
+          .from("v_publicaciones_rating")
+          .select("publicacion_id,rating_promedio,total_opiniones")
+          .in("publicacion_id", rpcIds),
+      ]);
 
       const fullMap = new Map<string, any>();
       for (const row of fullRows || []) {
         fullMap.set(row.id, row);
       }
 
+      const ratingMap = new Map<string, any>();
+      for (const row of ratingRows || []) {
+        ratingMap.set(row.publicacion_id, row);
+      }
+
       items = rpcIds
-        .map((id: string) => fullMap.get(id))
-        .filter(Boolean)
-        .map((p: any) => ({ ...p, plan_actual: p.plan_actual || "free" })) as PublicacionItem[];
+        .map((id: string) => {
+          const p = fullMap.get(id);
+          if (!p) return null;
+
+          const ratingData = ratingMap.get(id);
+          return {
+            ...p,
+            rating: ratingData?.rating_promedio ?? p.rating ?? 0,
+            plan_actual: p.plan_actual || "free",
+          };
+        })
+        .filter(Boolean) as PublicacionItem[];
     }
 
     if (!isFullList && filtros.atiende_en.length > 1) {
@@ -176,20 +196,40 @@ export async function fetchPublicacionesByZona(
 
     let items: PublicacionItem[] = [];
     if (rpcIds.length > 0) {
-      const { data: fullRows } = await supabase
-        .from("publicaciones")
-        .select("id,nombre,edad,departamento,zona,cover_url,fotos,fotos_preview,video_preview_url,rating,disponible,ultima_actividad,tarifa_hora,altura_cm,servicios,atiende_en,user_id,plan_actual,plan_weight,updated_at,categoria,precio,mostrar_precio")
-        .in("id", rpcIds);
+      const [{ data: fullRows }, { data: ratingRows }] = await Promise.all([
+        supabase
+          .from("publicaciones")
+          .select("id,nombre,edad,departamento,zona,cover_url,fotos,fotos_preview,video_preview_url,rating,disponible,ultima_actividad,tarifa_hora,altura_cm,servicios,atiende_en,user_id,plan_actual,plan_weight,updated_at,categoria,precio,mostrar_precio")
+          .in("id", rpcIds),
+        supabase
+          .from("v_publicaciones_rating")
+          .select("publicacion_id,rating_promedio,total_opiniones")
+          .in("publicacion_id", rpcIds),
+      ]);
 
       const fullMap = new Map<string, any>();
       for (const row of fullRows || []) {
         fullMap.set(row.id, row);
       }
 
+      const ratingMap = new Map<string, any>();
+      for (const row of ratingRows || []) {
+        ratingMap.set(row.publicacion_id, row);
+      }
+
       items = rpcIds
-        .map((id: string) => fullMap.get(id))
-        .filter(Boolean)
-        .map((p: any) => ({ ...p, plan_actual: p.plan_actual || "free" })) as PublicacionItem[];
+        .map((id: string) => {
+          const p = fullMap.get(id);
+          if (!p) return null;
+
+          const ratingData = ratingMap.get(id);
+          return {
+            ...p,
+            rating: ratingData?.rating_promedio ?? p.rating ?? 0,
+            plan_actual: p.plan_actual || "free",
+          };
+        })
+        .filter(Boolean) as PublicacionItem[];
     }
 
     return { items, count: items.length };
@@ -284,20 +324,40 @@ export async function fetchPublicacionesPorZona(
 
     let items: PublicacionItem[] = [];
     if (rpcIds.length > 0) {
-      const { data: fullRows } = await supabase
-        .from("publicaciones")
-        .select("id,nombre,edad,departamento,zona,cover_url,fotos,fotos_preview,video_preview_url,rating,disponible,ultima_actividad,tarifa_hora,altura_cm,servicios,atiende_en,user_id,plan_actual,plan_weight,updated_at,categoria,precio,mostrar_precio")
-        .in("id", rpcIds);
+      const [{ data: fullRows }, { data: ratingRows }] = await Promise.all([
+        supabase
+          .from("publicaciones")
+          .select("id,nombre,edad,departamento,zona,cover_url,fotos,fotos_preview,video_preview_url,rating,disponible,ultima_actividad,tarifa_hora,altura_cm,servicios,atiende_en,user_id,plan_actual,plan_weight,updated_at,categoria,precio,mostrar_precio")
+          .in("id", rpcIds),
+        supabase
+          .from("v_publicaciones_rating")
+          .select("publicacion_id,rating_promedio,total_opiniones")
+          .in("publicacion_id", rpcIds),
+      ]);
 
       const fullMap = new Map<string, any>();
       for (const row of fullRows || []) {
         fullMap.set(row.id, row);
       }
 
+      const ratingMap = new Map<string, any>();
+      for (const row of ratingRows || []) {
+        ratingMap.set(row.publicacion_id, row);
+      }
+
       items = rpcIds
-        .map((id: string) => fullMap.get(id))
-        .filter(Boolean)
-        .map((p: any) => ({ ...p, plan_actual: p.plan_actual || "free" })) as PublicacionItem[];
+        .map((id: string) => {
+          const p = fullMap.get(id);
+          if (!p) return null;
+
+          const ratingData = ratingMap.get(id);
+          return {
+            ...p,
+            rating: ratingData?.rating_promedio ?? p.rating ?? 0,
+            plan_actual: p.plan_actual || "free",
+          };
+        })
+        .filter(Boolean) as PublicacionItem[];
     }
 
     return { items, count: items.length };
