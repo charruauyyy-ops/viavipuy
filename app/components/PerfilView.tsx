@@ -151,6 +151,7 @@ export default function PerfilView({
   const [reportSending, setReportSending] = useState(false);
   const [reportSent, setReportSent] = useState(false);
   const [comments, setComments] = useState<Comment[]>([]);
+  const [ratingPromedio, setRatingPromedio] = useState<number | null>(null);
   const [commentText, setCommentText] = useState("");
   const [commentRating, setCommentRating] = useState(0);
   const [commentNombre, setCommentNombre] = useState("");
@@ -287,6 +288,7 @@ export default function PerfilView({
         setIsVerified(data.verification_status === "verified");
         const rawPlan = (data.plan_actual || "free").toLowerCase();
         setPlanId(rawPlan);
+        await loadRatingSummary();
         if (data.user_id) {
           trackProfileEvent(data.user_id, "view", { publicacion_id: id });
         }
@@ -462,6 +464,29 @@ export default function PerfilView({
     loadStories();
   }, [pub]);
 
+  async function loadRatingSummary() {
+    const supabase = getSupabase();
+    if (!supabase || !id) return;
+    try {
+      const { data, error } = await supabase
+        .from("v_publicaciones_rating")
+        .select("rating_promedio, total_opiniones")
+        .eq("publicacion_id", id)
+        .maybeSingle();
+      if (error) {
+        console.error("[perfil] Error loading rating summary:", error.message);
+        return;
+      }
+      if (data?.rating_promedio != null) {
+        setRatingPromedio(Number(data.rating_promedio));
+      } else {
+        setRatingPromedio(null);
+      }
+    } catch (err) {
+      console.error("[perfil] Failed to load rating summary:", err);
+    }
+  }
+
   async function loadOpiniones() {
     const supabase = getSupabase();
     if (!supabase || !id) return;
@@ -483,7 +508,10 @@ export default function PerfilView({
   }
 
   useEffect(() => {
-    if (id) loadOpiniones();
+    if (id) {
+      loadOpiniones();
+      loadRatingSummary();
+    }
   }, [id]);
 
   const handleScroll = useCallback(() => {
@@ -621,6 +649,7 @@ export default function PerfilView({
         setCommentNombre("");
         setCommentAnonimo(false);
         await loadOpiniones();
+        await loadRatingSummary();
       }
     } catch (err) {
       console.error("[perfil] Failed to insert opinion:", err);
@@ -714,7 +743,7 @@ export default function PerfilView({
     ? isDisponibleAhora(pub.disponible, pub.ultima_actividad)
     : false;
   const activityLabel = mounted ? getActivityLabel(pub.ultima_actividad) : null;
-  const rating = pub.rating != null ? pub.rating : 4.8;
+  const rating = ratingPromedio ?? (pub.rating != null ? pub.rating : 0);
   const planConfig = getPlanConfig(planId);
   const coverImg = fixStorageUrl(pub.cover_url || "");
   const serviceGroups =
