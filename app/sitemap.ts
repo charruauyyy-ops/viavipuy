@@ -11,10 +11,25 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "tres-cruces",
     "buceo",
     "malvin",
-    "union",
+    "la-union",
     "paso-molino",
     "piedras-blancas",
-    "prado"
+    "prado",
+    "la-comercial",
+    "parque-batlle",
+    "maronas"
+  ];
+
+  const servicios = [
+    "masajes",
+    "gfe",
+    "escort-vip",
+    "sexo-oral",
+    "sexo-anal",
+    "duo",
+    "trios",
+    "servicio-vip",
+    "virtual"
   ];
 
   const urls = [
@@ -26,18 +41,25 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/escorts-verificadas",
     "/escorts-nuevas",
     "/escorts-disponibles-ahora",
-    "/escorts-virtuales"
+    "/escorts-virtuales",
+    "/servicios"
   ];
 
   const staticPages = urls.map((url) => ({
     url: `${base}${url}`,
-    lastModified: new Date(),
   }));
 
   const zonasPages = zonas.map((zona) => ({
     url: `${base}/mujeres/${zona}`,
-    lastModified: new Date(),
   }));
 
-  return [...staticPages, ...zonasPages];
+  const serviciosPages = servicios.map((servicio) => ({
+    url: `${base}/servicios/${servicio}`,
+  }));
+
+  return [
+    ...staticPages,
+    ...zonasPages,
+    ...serviciosPages
+  ];
 }
