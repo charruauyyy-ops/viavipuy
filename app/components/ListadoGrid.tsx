@@ -272,7 +272,7 @@ export default function ListadoGrid({ items, basePath }: ListadoGridProps) {
           const disponible = mounted
             ? isDisponibleAhora(item.disponible, item.ultima_actividad)
             : false;
-          const rating = item.rating != null ? item.rating : 4.8;
+          const rating = (item as any).rating_promedio ?? item.rating ?? 4.8;
           const profileUrl = getProfileHref(item, basePath);
 
           return (
