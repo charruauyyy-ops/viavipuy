@@ -78,8 +78,28 @@ export async function getFilteredPublicaciones(
     const { data, error } = await query;
     if (error) return { items: [], count: 0, error: error.message };
 
-    const items = ((data || []) as any[]).map((p) => ({
+    const baseItems = (data || []) as any[];
+    const ids = baseItems.map((p) => p.id).filter(Boolean);
+
+    let ratingMap = new Map<string, number>();
+
+    if (ids.length > 0) {
+      const { data: ratingsData } = await supabase
+        .from("v_publicaciones_rating")
+        .select("publicacion_id,rating_promedio")
+        .in("publicacion_id", ids);
+
+      ratingMap = new Map(
+        ((ratingsData || []) as any[]).map((r) => [
+          r.publicacion_id,
+          Number(r.rating_promedio ?? 0),
+        ]),
+      );
+    }
+
+    const items = baseItems.map((p) => ({
       ...p,
+      rating: ratingMap.get(p.id) ?? p.rating ?? 0,
       plan_actual: p.plan_actual || "free",
     })) as PublicacionItem[];
 
